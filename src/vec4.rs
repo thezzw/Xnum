@@ -147,6 +147,13 @@ impl Vec4 {
         Vec3::new(self.x, self.y, self.z)
     }
 
+    /// Creates a 4D vector with all elements set to `w`.
+    #[inline]
+    #[must_use]
+    pub fn wwww(self) -> Self {
+        Self::splat(self.w)
+    }
+
     /// Computes the dot product of `self` and `rhs`.
     #[inline]
     #[must_use]

@@ -608,8 +608,8 @@ impl Vec2 {
     /// The input does not need to be a unit vector however it must be non-zero.
     #[inline]
     #[must_use]
-    pub fn to_angle(self) -> (X64, X64) {
-        (self.y / self.x).atan()
+    pub fn to_angle(self) -> X64 {
+        X64::atan2(self.y, self.x)
     }
 
     /// Returns the angle (in radians) between `self` and `rhs` in the range `[-π, +π]`.

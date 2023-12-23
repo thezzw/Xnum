@@ -6,6 +6,16 @@
 pub mod vec2;
 pub mod vec3;
 pub mod vec4;
+pub mod mat2;
+pub mod mat3;
+pub mod mat4;
+pub mod affine2;
+pub mod affine3;
+pub mod quat;
+pub mod euler;
+pub mod deref;
+
+pub mod rand;
 
 use fixed::{types::{I16F16, I32F32, I64F64, I4F60}, traits::Fixed};
 pub type X32 = I16F16;
@@ -65,6 +75,8 @@ pub trait FixedTrigonometry: Fixed {
     fn acos(self) -> (Self, Self);
     /// Returns two angles in radians corresponding to the Tan value within [-PI, PI].
     fn atan(self) -> (Self, Self);
+    /// Returns one angle in radians corresponding to the Tan value (y / x) within [-PI, PI].
+    fn atan2(y: Self, x: Self) -> Self;
 }
 
 macro_rules! cordic_fixed {
@@ -205,6 +217,12 @@ macro_rules! cordic_fixed {
                     result = (z, z + Self::PI);
                 }
                 result
+            }
+
+            fn atan2(y: Self, x: Self) -> Self {
+                let opt_rst = (y / x).atan();
+                if y < X64::ZERO { return opt_rst.0; }
+                opt_rst.1
             }
         }
     }
