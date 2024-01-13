@@ -9,7 +9,7 @@ pub struct XY<T> {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd)]
 #[cfg_attr(target_arch = "spirv", repr(simd))]
 #[cfg_attr(not(target_arch = "spirv"), repr(C))]
-pub struct Vec3<T> {
+pub struct XVec3<T> {
     pub x: T,
     pub y: T,
     pub z: T,
@@ -18,7 +18,7 @@ pub struct Vec3<T> {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd)]
 #[cfg_attr(target_arch = "spirv", repr(simd))]
 #[cfg_attr(not(target_arch = "spirv"), repr(C))]
-pub struct Vec4<T> {
+pub struct XVec4<T> {
     pub x: T,
     pub y: T,
     pub z: T,

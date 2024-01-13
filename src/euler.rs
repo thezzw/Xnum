@@ -14,7 +14,7 @@ use crate::quat::*;
 ///
 /// YXZ can be used for yaw (y-axis), pitch (x-axis), roll (z-axis).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum EulerRot {
+pub enum XEulerRot {
     /// Intrinsic three-axis rotation ZYX
     ZYX,
     /// Intrinsic three-axis rotation ZXY
@@ -29,7 +29,7 @@ pub enum EulerRot {
     XZY,
 }
 
-impl Default for EulerRot {
+impl Default for XEulerRot {
     /// Default `YXZ` as yaw (y-axis), pitch (x-axis), roll (z-axis).
     fn default() -> Self {
         Self::YXZ
@@ -62,11 +62,11 @@ pub(crate) trait EulerToQuaternion<T>: Copy {
 
 macro_rules! impl_from_quat {
     ($t:ty, $quat:ident) => {
-        impl EulerFromQuaternion<$quat> for EulerRot {
+        impl EulerFromQuaternion<$quat> for XEulerRot {
             type Output = $t;
 
             fn sine_theta(self, q: $quat) -> $t {
-                use EulerRot::*;
+                use XEulerRot::*;
                 match self {
                     ZYX => -X64::ONE * 2 * (q.x * q.z - q.w * q.y),
                     ZXY => X64::ONE * 2 * (q.y * q.z + q.w * q.x),
@@ -79,7 +79,7 @@ macro_rules! impl_from_quat {
             }
 
             fn first(self, q: $quat) -> $t {
-                use EulerRot::*;
+                use XEulerRot::*;
 
                 let sine_theta = self.sine_theta(q);
                 if sine_theta.abs() > 0.99999 {
@@ -128,7 +128,7 @@ macro_rules! impl_from_quat {
             }
 
             fn third(self, q: $quat) -> $t {
-                use EulerRot::*;
+                use XEulerRot::*;
                 if self.sine_theta(q).abs() > 0.99999 {
                     X64::ZERO
                 } else {
@@ -162,7 +162,7 @@ macro_rules! impl_from_quat {
             }
 
             fn convert_quat(self, q: $quat) -> ($t, $t, $t) {
-                use EulerRot::*;
+                use XEulerRot::*;
 
                 let sine_theta = self.sine_theta(q);
                 let second = sine_theta.asin().1;
@@ -243,11 +243,11 @@ macro_rules! impl_from_quat {
 
 macro_rules! impl_to_quat {
     ($t:ty, $quat:ident) => {
-        impl EulerToQuaternion<$t> for EulerRot {
+        impl EulerToQuaternion<$t> for XEulerRot {
             type Output = $quat;
             #[inline(always)]
             fn new_quat(self, u: $t, v: $t, w: $t) -> $quat {
-                use EulerRot::*;
+                use XEulerRot::*;
                 #[inline(always)]
                 fn rot_x(a: $t) -> $quat {
                     $quat::from_rotation_x(a)
@@ -275,5 +275,5 @@ macro_rules! impl_to_quat {
     };
 }
 
-impl_from_quat!(X64, Quat);
-impl_to_quat!(X64, Quat);
+impl_from_quat!(X64, XQuat);
+impl_to_quat!(X64, XQuat);

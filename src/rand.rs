@@ -4,15 +4,15 @@ const N: usize = 624;
 const M: usize = 397;
 
 /// Random number generator using the Mersenne Twister algorithm.
-pub struct Rng {
+pub struct XRng {
     state: [u32; N],
     index: u32,
 }
 
-impl Rng {
+impl XRng {
     /// Initializes the random number seed with a u32 value.
-    pub fn new(seed: u32) -> Rng {
-        let mut mt = Rng {
+    pub fn new(seed: u32) -> XRng {
+        let mut mt = XRng {
             state: [0; N],
             index: N as u32,
         };

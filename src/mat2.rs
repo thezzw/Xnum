@@ -10,43 +10,43 @@ use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 /// Creates a 2x2 matrix from two column vectors.
 #[inline(always)]
 #[must_use]
-pub const fn mat2(x_axis: Vec2, y_axis: Vec2) -> Mat2 {
-    Mat2::from_cols(x_axis, y_axis)
+pub const fn mat2(x_axis: XVec2, y_axis: XVec2) -> XMat2 {
+    XMat2::from_cols(x_axis, y_axis)
 }
 
 /// A 2x2 column major matrix.
 #[derive(Clone, Copy)]
 #[cfg_attr(feature = "cuda", repr(align(16)))]
 #[repr(C)]
-pub struct Mat2 {
-    pub x_axis: Vec2,
-    pub y_axis: Vec2,
+pub struct XMat2 {
+    pub x_axis: XVec2,
+    pub y_axis: XVec2,
 }
 
-impl Mat2 {
+impl XMat2 {
     /// A 2x2 matrix with all elements set to `X64::ZERO`.
-    pub const ZERO: Self = Self::from_cols(Vec2::ZERO, Vec2::ZERO);
+    pub const ZERO: Self = Self::from_cols(XVec2::ZERO, XVec2::ZERO);
 
     /// A 2x2 identity matrix, where all diagonal elements are `1`, and all off-diagonal elements are `0`.
-    pub const IDENTITY: Self = Self::from_cols(Vec2::X, Vec2::Y);
+    pub const IDENTITY: Self = Self::from_cols(XVec2::X, XVec2::Y);
 
     /// All NAN:s.
-    pub const NAN: Self = Self::from_cols(Vec2::NAN, Vec2::NAN);
+    pub const NAN: Self = Self::from_cols(XVec2::NAN, XVec2::NAN);
 
     #[allow(clippy::too_many_arguments)]
     #[inline(always)]
     #[must_use]
     const fn new(m00: X64, m01: X64, m10: X64, m11: X64) -> Self {
         Self {
-            x_axis: Vec2::new(m00, m01),
-            y_axis: Vec2::new(m10, m11),
+            x_axis: XVec2::new(m00, m01),
+            y_axis: XVec2::new(m10, m11),
         }
     }
 
     /// Creates a 2x2 matrix from two column vectors.
     #[inline(always)]
     #[must_use]
-    pub const fn from_cols(x_axis: Vec2, y_axis: Vec2) -> Self {
+    pub const fn from_cols(x_axis: XVec2, y_axis: XVec2) -> Self {
         Self { x_axis, y_axis }
     }
 
@@ -73,7 +73,7 @@ impl Mat2 {
     #[inline]
     #[must_use]
     pub const fn from_cols_array_2d(m: &[[X64; 2]; 2]) -> Self {
-        Self::from_cols(Vec2::from_array(m[0]), Vec2::from_array(m[1]))
+        Self::from_cols(XVec2::from_array(m[0]), XVec2::from_array(m[1]))
     }
 
     /// Creates a `[[X64; 2]; 2]` 2D array storing data in column major order.
@@ -88,7 +88,7 @@ impl Mat2 {
     #[doc(alias = "scale")]
     #[inline]
     #[must_use]
-    pub const fn from_diagonal(diagonal: Vec2) -> Self {
+    pub const fn from_diagonal(diagonal: XVec2) -> Self {
         Self::new(diagonal.x, X64::ZERO, X64::ZERO, diagonal.y)
     }
 
@@ -96,7 +96,7 @@ impl Mat2 {
     /// `angle` (in radians).
     #[inline]
     #[must_use]
-    pub fn from_scale_angle(scale: Vec2, angle: X64) -> Self {
+    pub fn from_scale_angle(scale: XVec2, angle: X64) -> Self {
         let (sin, cos) = angle.sin_cos();
         Self::new(cos * scale.x, sin * scale.x, -sin * scale.y, cos * scale.y)
     }
@@ -112,7 +112,7 @@ impl Mat2 {
     /// Creates a 2x2 matrix from a 3x3 matrix, discarding the 2nd row and column.
     #[inline]
     #[must_use]
-    pub fn from_mat3(m: Mat3) -> Self {
+    pub fn from_mat3(m: XMat3) -> Self {
         Self::from_cols(m.x_axis.truncate(), m.y_axis.truncate())
     }
 
@@ -147,7 +147,7 @@ impl Mat2 {
     /// Panics if `index` is greater than 1.
     #[inline]
     #[must_use]
-    pub fn col(&self, index: usize) -> Vec2 {
+    pub fn col(&self, index: usize) -> XVec2 {
         match index {
             0 => self.x_axis,
             1 => self.y_axis,
@@ -161,7 +161,7 @@ impl Mat2 {
     ///
     /// Panics if `index` is greater than 1.
     #[inline]
-    pub fn col_mut(&mut self, index: usize) -> &mut Vec2 {
+    pub fn col_mut(&mut self, index: usize) -> &mut XVec2 {
         match index {
             0 => &mut self.x_axis,
             1 => &mut self.y_axis,
@@ -176,10 +176,10 @@ impl Mat2 {
     /// Panics if `index` is greater than 1.
     #[inline]
     #[must_use]
-    pub fn row(&self, index: usize) -> Vec2 {
+    pub fn row(&self, index: usize) -> XVec2 {
         match index {
-            0 => Vec2::new(self.x_axis.x, self.y_axis.x),
-            1 => Vec2::new(self.x_axis.y, self.y_axis.y),
+            0 => XVec2::new(self.x_axis.x, self.y_axis.x),
+            1 => XVec2::new(self.x_axis.y, self.y_axis.y),
             _ => panic!("index out of bounds"),
         }
     }
@@ -204,8 +204,8 @@ impl Mat2 {
     #[must_use]
     pub fn transpose(&self) -> Self {
         Self {
-            x_axis: Vec2::new(self.x_axis.x, self.y_axis.x),
-            y_axis: Vec2::new(self.x_axis.y, self.y_axis.y),
+            x_axis: XVec2::new(self.x_axis.x, self.y_axis.x),
+            y_axis: XVec2::new(self.x_axis.y, self.y_axis.y),
         }
     }
 
@@ -242,9 +242,9 @@ impl Mat2 {
     /// Transforms a 2D vector.
     #[inline]
     #[must_use]
-    pub fn mul_vec2(&self, rhs: Vec2) -> Vec2 {
+    pub fn mul_vec2(&self, rhs: XVec2) -> XVec2 {
         #[allow(clippy::suspicious_operation_groupings)]
-        Vec2::new(
+        XVec2::new(
             (self.x_axis.x * rhs.x) + (self.y_axis.x * rhs.y),
             (self.x_axis.y * rhs.x) + (self.y_axis.y * rhs.y),
         )
@@ -295,14 +295,14 @@ impl Mat2 {
     }
 }
 
-impl Default for Mat2 {
+impl Default for XMat2 {
     #[inline]
     fn default() -> Self {
         Self::IDENTITY
     }
 }
 
-impl Add<Mat2> for Mat2 {
+impl Add<XMat2> for XMat2 {
     type Output = Self;
     #[inline]
     fn add(self, rhs: Self) -> Self::Output {
@@ -310,14 +310,14 @@ impl Add<Mat2> for Mat2 {
     }
 }
 
-impl AddAssign<Mat2> for Mat2 {
+impl AddAssign<XMat2> for XMat2 {
     #[inline]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.add_mat2(&rhs);
     }
 }
 
-impl Sub<Mat2> for Mat2 {
+impl Sub<XMat2> for XMat2 {
     type Output = Self;
     #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
@@ -325,14 +325,14 @@ impl Sub<Mat2> for Mat2 {
     }
 }
 
-impl SubAssign<Mat2> for Mat2 {
+impl SubAssign<XMat2> for XMat2 {
     #[inline]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.sub_mat2(&rhs);
     }
 }
 
-impl Neg for Mat2 {
+impl Neg for XMat2 {
     type Output = Self;
     #[inline]
     fn neg(self) -> Self::Output {
@@ -340,7 +340,7 @@ impl Neg for Mat2 {
     }
 }
 
-impl Mul<Mat2> for Mat2 {
+impl Mul<XMat2> for XMat2 {
     type Output = Self;
     #[inline]
     fn mul(self, rhs: Self) -> Self::Output {
@@ -348,30 +348,30 @@ impl Mul<Mat2> for Mat2 {
     }
 }
 
-impl MulAssign<Mat2> for Mat2 {
+impl MulAssign<XMat2> for XMat2 {
     #[inline]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.mul_mat2(&rhs);
     }
 }
 
-impl Mul<Vec2> for Mat2 {
-    type Output = Vec2;
+impl Mul<XVec2> for XMat2 {
+    type Output = XVec2;
     #[inline]
-    fn mul(self, rhs: Vec2) -> Self::Output {
+    fn mul(self, rhs: XVec2) -> Self::Output {
         self.mul_vec2(rhs)
     }
 }
 
-impl Mul<Mat2> for X64 {
-    type Output = Mat2;
+impl Mul<XMat2> for X64 {
+    type Output = XMat2;
     #[inline]
-    fn mul(self, rhs: Mat2) -> Self::Output {
+    fn mul(self, rhs: XMat2) -> Self::Output {
         rhs.mul_scalar(self)
     }
 }
 
-impl Mul<X64> for Mat2 {
+impl Mul<X64> for XMat2 {
     type Output = Self;
     #[inline]
     fn mul(self, rhs: X64) -> Self::Output {
@@ -379,14 +379,14 @@ impl Mul<X64> for Mat2 {
     }
 }
 
-impl MulAssign<X64> for Mat2 {
+impl MulAssign<X64> for XMat2 {
     #[inline]
     fn mul_assign(&mut self, rhs: X64) {
         *self = self.mul_scalar(rhs);
     }
 }
 
-impl Sum<Self> for Mat2 {
+impl Sum<Self> for XMat2 {
     fn sum<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -395,7 +395,7 @@ impl Sum<Self> for Mat2 {
     }
 }
 
-impl<'a> Sum<&'a Self> for Mat2 {
+impl<'a> Sum<&'a Self> for XMat2 {
     fn sum<I>(iter: I) -> Self
     where
         I: Iterator<Item = &'a Self>,
@@ -404,7 +404,7 @@ impl<'a> Sum<&'a Self> for Mat2 {
     }
 }
 
-impl Product for Mat2 {
+impl Product for XMat2 {
     fn product<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -413,7 +413,7 @@ impl Product for Mat2 {
     }
 }
 
-impl<'a> Product<&'a Self> for Mat2 {
+impl<'a> Product<&'a Self> for XMat2 {
     fn product<I>(iter: I) -> Self
     where
         I: Iterator<Item = &'a Self>,
@@ -422,7 +422,7 @@ impl<'a> Product<&'a Self> for Mat2 {
     }
 }
 
-impl PartialEq for Mat2 {
+impl PartialEq for XMat2 {
     #[inline]
     fn eq(&self, rhs: &Self) -> bool {
         self.x_axis.eq(&rhs.x_axis) && self.y_axis.eq(&rhs.y_axis)
@@ -430,7 +430,7 @@ impl PartialEq for Mat2 {
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl AsRef<[X64; 4]> for Mat2 {
+impl AsRef<[X64; 4]> for XMat2 {
     #[inline]
     fn as_ref(&self) -> &[X64; 4] {
         unsafe { &*(self as *const Self as *const [X64; 4]) }
@@ -438,7 +438,7 @@ impl AsRef<[X64; 4]> for Mat2 {
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl AsMut<[X64; 4]> for Mat2 {
+impl AsMut<[X64; 4]> for XMat2 {
     #[inline]
     fn as_mut(&mut self) -> &mut [X64; 4] {
         unsafe { &mut *(self as *mut Self as *mut [X64; 4]) }
@@ -446,9 +446,9 @@ impl AsMut<[X64; 4]> for Mat2 {
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl fmt::Debug for Mat2 {
+impl fmt::Debug for XMat2 {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt.debug_struct(stringify!(Mat2))
+        fmt.debug_struct(stringify!(XMat2))
             .field("x_axis", &self.x_axis)
             .field("y_axis", &self.y_axis)
             .finish()
@@ -456,7 +456,7 @@ impl fmt::Debug for Mat2 {
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl fmt::Display for Mat2 {
+impl fmt::Display for XMat2 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "[{}, {}]", self.x_axis, self.y_axis)
     }

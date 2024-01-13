@@ -18,8 +18,8 @@ use core::ops::{Add, Div, Mul, MulAssign, Neg, Sub};
 /// one of the other constructors instead such as `identity` or `from_axis_angle`.
 #[inline]
 #[must_use]
-pub const fn quat(x: X64, y: X64, z: X64, w: X64) -> Quat {
-    Quat::from_xyzw(x, y, z, w)
+pub const fn quat(x: X64, y: X64, z: X64, w: X64) -> XQuat {
+    XQuat::from_xyzw(x, y, z, w)
 }
 
 /// A quaternion representing an orientation.
@@ -30,14 +30,14 @@ pub const fn quat(x: X64, y: X64, z: X64, w: X64) -> Quat {
 #[derive(Clone, Copy)]
 #[cfg_attr(not(target_arch = "spirv"), repr(C))]
 #[cfg_attr(target_arch = "spirv", repr(simd))]
-pub struct Quat {
+pub struct XQuat {
     pub x: X64,
     pub y: X64,
     pub z: X64,
     pub w: X64,
 }
 
-impl Quat {
+impl XQuat {
     /// All zeros.
     const ZERO: Self = Self::from_array([X64::ZERO; 4]);
 
@@ -84,7 +84,7 @@ impl Quat {
     /// provide normalized input or to normalized the resulting quaternion.
     #[inline]
     #[must_use]
-    pub const fn from_vec4(v: Vec4) -> Self {
+    pub const fn from_vec4(v: XVec4) -> Self {
         Self {
             x: v.x,
             y: v.y,
@@ -131,7 +131,7 @@ impl Quat {
     /// Will panic if `axis` is not normalized when `assert` is enabled.
     #[inline]
     #[must_use]
-    pub fn from_axis_angle(axis: Vec3, angle: X64) -> Self {
+    pub fn from_axis_angle(axis: XVec3, angle: X64) -> Self {
         assert!(axis.is_normalized());
         let (s, c) = (angle * (X64::ONE / 2)).sin_cos();
         let v = axis * s;
@@ -140,10 +140,10 @@ impl Quat {
 
     /// Create a quaternion that rotates `v.length()` radians around `v.normalize()`.
     ///
-    /// `from_scaled_axis(Vec3::ZERO)` results in the identity quaternion.
+    /// `from_scaled_axis(XVec3::ZERO)` results in the identity quaternion.
     #[inline]
     #[must_use]
-    pub fn from_scaled_axis(v: Vec3) -> Self {
+    pub fn from_scaled_axis(v: XVec3) -> Self {
         let length = v.length();
         if length == X64::ZERO {
             Self::IDENTITY
@@ -179,14 +179,14 @@ impl Quat {
     /// Creates a quaternion from the given Euler rotation sequence and the angles (in radians).
     #[inline]
     #[must_use]
-    pub fn from_euler(euler: EulerRot, a: X64, b: X64, c: X64) -> Self {
+    pub fn from_euler(euler: XEulerRot, a: X64, b: X64, c: X64) -> Self {
         euler.new_quat(a, b, c)
     }
 
     /// From the columns of a 3x3 rotation matrix.
     #[inline]
     #[must_use]
-    pub(crate) fn from_rotation_axes(x_axis: Vec3, y_axis: Vec3, z_axis: Vec3) -> Self {
+    pub(crate) fn from_rotation_axes(x_axis: XVec3, y_axis: XVec3, z_axis: XVec3) -> Self {
         // Based on https://github.com/microsoft/DirectXMath `XM$quaternionRotationMatrix`
         let (m00, m01, m02) = x_axis.into();
         let (m10, m11, m12) = y_axis.into();
@@ -247,14 +247,14 @@ impl Quat {
     /// Creates a quaternion from a 3x3 rotation matrix.
     #[inline]
     #[must_use]
-    pub fn from_mat3(mat: &Mat3) -> Self {
+    pub fn from_mat3(mat: &XMat3) -> Self {
         Self::from_rotation_axes(mat.x_axis, mat.y_axis, mat.z_axis)
     }
 
     /// Creates a quaternion from a 3x3 rotation matrix inside a homogeneous 4x4 matrix.
     #[inline]
     #[must_use]
-    pub fn from_mat4(mat: &Mat4) -> Self {
+    pub fn from_mat4(mat: &XMat4) -> Self {
         Self::from_rotation_axes(
             mat.x_axis.truncate(),
             mat.y_axis.truncate(),
@@ -276,7 +276,7 @@ impl Quat {
     ///
     /// Will panic if `from` or `to` are not normalized when `assert` is enabled.
     #[must_use]
-    pub fn from_rotation_arc(from: Vec3, to: Vec3) -> Self {
+    pub fn from_rotation_arc(from: XVec3, to: XVec3) -> Self {
         assert!(from.is_normalized());
         assert!(to.is_normalized());
 
@@ -310,7 +310,7 @@ impl Quat {
     /// Will panic if `from` or `to` are not normalized when `assert` is enabled.
     #[inline]
     #[must_use]
-    pub fn from_rotation_arc_colinear(from: Vec3, to: Vec3) -> Self {
+    pub fn from_rotation_arc_colinear(from: XVec3, to: XVec3) -> Self {
         if from.dot(to) < X64::ZERO {
             Self::from_rotation_arc(from, -to)
         } else {
@@ -332,7 +332,7 @@ impl Quat {
     ///
     /// Will panic if `from` or `to` are not normalized when `assert` is enabled.
     #[must_use]
-    pub fn from_rotation_arc_2d(from: Vec2, to: Vec2) -> Self {
+    pub fn from_rotation_arc_2d(from: XVec2, to: XVec2) -> Self {
         assert!(from.is_normalized());
         assert!(to.is_normalized());
 
@@ -360,23 +360,23 @@ impl Quat {
     /// Returns the rotation axis (normalized) and angle (in radians) of `self`.
     #[inline]
     #[must_use]
-    pub fn to_axis_angle(self) -> (Vec3, X64) {
+    pub fn to_axis_angle(self) -> (XVec3, X64) {
         let epsilon: X64 = X64::DELTA << 3;
-        let v = Vec3::new(self.x, self.y, self.z);
+        let v = XVec3::new(self.x, self.y, self.z);
         let length = v.length();
         if length >= epsilon {
             let angle = (X64::ONE * 2) * X64::atan2(length, self.w);
             let axis = v / length;
             (axis, angle)
         } else {
-            (Vec3::X, X64::ZERO)
+            (XVec3::X, X64::ZERO)
         }
     }
 
     /// Returns the rotation axis scaled by the rotation in radians.
     #[inline]
     #[must_use]
-    pub fn to_scaled_axis(self) -> Vec3 {
+    pub fn to_scaled_axis(self) -> XVec3 {
         let (axis, angle) = self.to_axis_angle();
         axis * angle
     }
@@ -384,7 +384,7 @@ impl Quat {
     /// Returns the rotation angles for the given euler rotation sequence.
     #[inline]
     #[must_use]
-    pub fn to_euler(self, euler: EulerRot) -> (X64, X64, X64) {
+    pub fn to_euler(self, euler: XEulerRot) -> (X64, X64, X64) {
         euler.convert_quat(self)
     }
 
@@ -398,8 +398,8 @@ impl Quat {
     /// Returns the vector part of the quaternion.
     #[inline]
     #[must_use]
-    pub fn xyz(self) -> Vec3 {
-        Vec3::new(self.x, self.y, self.z)
+    pub fn xyz(self) -> XVec3 {
+        XVec3::new(self.x, self.y, self.z)
     }
 
     /// Returns the quaternion conjugate of `self`. For a unit quaternion the
@@ -436,7 +436,7 @@ impl Quat {
     #[inline]
     #[must_use]
     pub fn dot(self, rhs: Self) -> X64 {
-        Vec4::from(self).dot(Vec4::from(rhs))
+        XVec4::from(self).dot(XVec4::from(rhs))
     }
 
     /// Computes the length of `self`.
@@ -444,7 +444,7 @@ impl Quat {
     #[inline]
     #[must_use]
     pub fn length(self) -> X64 {
-        Vec4::from(self).length()
+        XVec4::from(self).length()
     }
 
     /// Computes the squared length of `self`.
@@ -455,7 +455,7 @@ impl Quat {
     #[inline]
     #[must_use]
     pub fn length_squared(self) -> X64 {
-        Vec4::from(self).length_squared()
+        XVec4::from(self).length_squared()
     }
 
     /// Computes `X64::ONE / length()`.
@@ -464,7 +464,7 @@ impl Quat {
     #[inline]
     #[must_use]
     pub fn length_recip(self) -> X64 {
-        Vec4::from(self).length_recip()
+        XVec4::from(self).length_recip()
     }
 
     /// Returns `self` normalized to length X64::ONE.
@@ -477,7 +477,7 @@ impl Quat {
     #[inline]
     #[must_use]
     pub fn normalize(self) -> Self {
-        Self::from_vec4(Vec4::from(self).normalize())
+        Self::from_vec4(XVec4::from(self).normalize())
     }
 
     /// Returns `true` if, and only if, all elements are finite.
@@ -485,13 +485,13 @@ impl Quat {
     #[inline]
     #[must_use]
     pub fn is_finite(self) -> bool {
-        Vec4::from(self).is_finite()
+        XVec4::from(self).is_finite()
     }
 
     #[inline]
     #[must_use]
     pub fn is_nan(self) -> bool {
-        Vec4::from(self).is_nan()
+        XVec4::from(self).is_nan()
     }
 
     /// Returns whether `self` of length `X64::ONE` or not.
@@ -500,7 +500,7 @@ impl Quat {
     #[inline]
     #[must_use]
     pub fn is_normalized(self) -> bool {
-        Vec4::from(self).is_normalized()
+        XVec4::from(self).is_normalized()
     }
 
     #[inline]
@@ -552,7 +552,7 @@ impl Quat {
     #[inline]
     #[must_use]
     pub fn abs_diff_eq(self, rhs: Self, max_abs_diff: X64) -> bool {
-        Vec4::from(self).abs_diff_eq(Vec4::from(rhs), max_abs_diff)
+        XVec4::from(self).abs_diff_eq(XVec4::from(rhs), max_abs_diff)
     }
 
     /// Performs a linear interpolation between `self` and `rhs` based on
@@ -629,11 +629,11 @@ impl Quat {
     /// Will panic if `self` is not normalized when `assert` is enabled.
     #[inline]
     #[must_use]
-    pub fn mul_vec3(self, rhs: Vec3) -> Vec3 {
+    pub fn mul_vec3(self, rhs: XVec3) -> XVec3 {
         assert!(self.is_normalized());
 
         let w = self.w;
-        let b = Vec3::new(self.x, self.y, self.z);
+        let b = XVec3::new(self.x, self.y, self.z);
         let b2 = b.dot(b);
         rhs.mul(w * w - b2)
             .add(b.mul(rhs.dot(b) * (X64::ONE * 2)))
@@ -667,7 +667,7 @@ impl Quat {
     /// Creates a quaternion from a 3x3 rotation matrix inside a 3D affine transform.
     #[inline]
     #[must_use]
-    pub fn from_affine3(a: &Affine3) -> Self {
+    pub fn from_affine3(a: &XAffine3) -> Self {
         #[allow(clippy::useless_conversion)]
         Self::from_rotation_axes(
             a.matrix3.x_axis.into(),
@@ -678,9 +678,9 @@ impl Quat {
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl fmt::Debug for Quat {
+impl fmt::Debug for XQuat {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt.debug_tuple(stringify!(Quat))
+        fmt.debug_tuple(stringify!(XQuat))
             .field(&self.x)
             .field(&self.y)
             .field(&self.z)
@@ -690,13 +690,13 @@ impl fmt::Debug for Quat {
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl fmt::Display for Quat {
+impl fmt::Display for XQuat {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(fmt, "[{}, {}, {}, {}]", self.x, self.y, self.z, self.w)
     }
 }
 
-impl Add<Quat> for Quat {
+impl Add<XQuat> for XQuat {
     type Output = Self;
     /// Adds two quaternions.
     ///
@@ -706,43 +706,43 @@ impl Add<Quat> for Quat {
     /// two quaternions! That corresponds to multiplication.
     #[inline]
     fn add(self, rhs: Self) -> Self {
-        Self::from_vec4(Vec4::from(self) + Vec4::from(rhs))
+        Self::from_vec4(XVec4::from(self) + XVec4::from(rhs))
     }
 }
 
-impl Sub<Quat> for Quat {
+impl Sub<XQuat> for XQuat {
     type Output = Self;
     /// Subtracts the `rhs` quaternion from `self`.
     ///
     /// The difference is not guaranteed to be normalized.
     #[inline]
     fn sub(self, rhs: Self) -> Self {
-        Self::from_vec4(Vec4::from(self) - Vec4::from(rhs))
+        Self::from_vec4(XVec4::from(self) - XVec4::from(rhs))
     }
 }
 
-impl Mul<X64> for Quat {
+impl Mul<X64> for XQuat {
     type Output = Self;
     /// Multiplies a quaternion by a scalar value.
     ///
     /// The product is not guaranteed to be normalized.
     #[inline]
     fn mul(self, rhs: X64) -> Self {
-        Self::from_vec4(Vec4::from(self) * rhs)
+        Self::from_vec4(XVec4::from(self) * rhs)
     }
 }
 
-impl Div<X64> for Quat {
+impl Div<X64> for XQuat {
     type Output = Self;
     /// Divides a quaternion by a scalar value.
     /// The quotient is not guaranteed to be normalized.
     #[inline]
     fn div(self, rhs: X64) -> Self {
-        Self::from_vec4(Vec4::from(self) / rhs)
+        Self::from_vec4(XVec4::from(self) / rhs)
     }
 }
 
-impl Mul<Quat> for Quat {
+impl Mul<XQuat> for XQuat {
     type Output = Self;
     /// Multiplies two quaternions. If they each represent a rotation, the result will
     /// represent the combined rotation.
@@ -759,7 +759,7 @@ impl Mul<Quat> for Quat {
     }
 }
 
-impl MulAssign<Quat> for Quat {
+impl MulAssign<XQuat> for XQuat {
     /// Multiplies two quaternions. If they each represent a rotation, the result will
     /// represent the combined rotation.
     ///
@@ -775,20 +775,20 @@ impl MulAssign<Quat> for Quat {
     }
 }
 
-impl Mul<Vec3> for Quat {
-    type Output = Vec3;
+impl Mul<XVec3> for XQuat {
+    type Output = XVec3;
     /// Multiplies a quaternion and a 3D vector, returning the rotated vector.
     ///
     /// # Panics
     ///
     /// Will panic if `self` is not normalized when `assert` is enabled.
     #[inline]
-    fn mul(self, rhs: Vec3) -> Self::Output {
+    fn mul(self, rhs: XVec3) -> Self::Output {
         self.mul_vec3(rhs)
     }
 }
 
-impl Neg for Quat {
+impl Neg for XQuat {
     type Output = Self;
     #[inline]
     fn neg(self) -> Self {
@@ -796,29 +796,29 @@ impl Neg for Quat {
     }
 }
 
-impl Default for Quat {
+impl Default for XQuat {
     #[inline]
     fn default() -> Self {
         Self::IDENTITY
     }
 }
 
-impl PartialEq for Quat {
+impl PartialEq for XQuat {
     #[inline]
     fn eq(&self, rhs: &Self) -> bool {
-        Vec4::from(*self).eq(&Vec4::from(*rhs))
+        XVec4::from(*self).eq(&XVec4::from(*rhs))
     }
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl AsRef<[X64; 4]> for Quat {
+impl AsRef<[X64; 4]> for XQuat {
     #[inline]
     fn as_ref(&self) -> &[X64; 4] {
         unsafe { &*(self as *const Self as *const [X64; 4]) }
     }
 }
 
-impl Sum<Self> for Quat {
+impl Sum<Self> for XQuat {
     fn sum<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -827,7 +827,7 @@ impl Sum<Self> for Quat {
     }
 }
 
-impl<'a> Sum<&'a Self> for Quat {
+impl<'a> Sum<&'a Self> for XQuat {
     fn sum<I>(iter: I) -> Self
     where
         I: Iterator<Item = &'a Self>,
@@ -836,7 +836,7 @@ impl<'a> Sum<&'a Self> for Quat {
     }
 }
 
-impl Product for Quat {
+impl Product for XQuat {
     fn product<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -845,7 +845,7 @@ impl Product for Quat {
     }
 }
 
-impl<'a> Product<&'a Self> for Quat {
+impl<'a> Product<&'a Self> for XQuat {
     fn product<I>(iter: I) -> Self
     where
         I: Iterator<Item = &'a Self>,
@@ -854,23 +854,23 @@ impl<'a> Product<&'a Self> for Quat {
     }
 }
 
-impl From<Quat> for Vec4 {
+impl From<XQuat> for XVec4 {
     #[inline]
-    fn from(q: Quat) -> Self {
+    fn from(q: XQuat) -> Self {
         Self::new(q.x, q.y, q.z, q.w)
     }
 }
 
-impl From<Quat> for (X64, X64, X64, X64) {
+impl From<XQuat> for (X64, X64, X64, X64) {
     #[inline]
-    fn from(q: Quat) -> Self {
+    fn from(q: XQuat) -> Self {
         (q.x, q.y, q.z, q.w)
     }
 }
 
-impl From<Quat> for [X64; 4] {
+impl From<XQuat> for [X64; 4] {
     #[inline]
-    fn from(q: Quat) -> Self {
+    fn from(q: XQuat) -> Self {
         [q.x, q.y, q.z, q.w]
     }
 }

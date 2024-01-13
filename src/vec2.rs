@@ -9,8 +9,8 @@ use core::ops::*;
 /// Creates a 2-dimensional vector.
 #[inline(always)]
 #[must_use]
-pub const fn vec2(x: X64, y: X64) -> Vec2 {
-    Vec2::new(x, y)
+pub const fn vec2(x: X64, y: X64) -> XVec2 {
+    XVec2::new(x, y)
 }
 
 /// A 2-dimensional vector.
@@ -18,12 +18,12 @@ pub const fn vec2(x: X64, y: X64) -> Vec2 {
 #[cfg_attr(feature = "cuda", repr(align(16)))]
 #[cfg_attr(not(target_arch = "spirv"), repr(C))]
 #[cfg_attr(target_arch = "spirv", repr(simd))]
-pub struct Vec2 {
+pub struct XVec2 {
     pub x: X64,
     pub y: X64,
 }
 
-impl Vec2 {
+impl XVec2 {
     /// All zeroes.
     pub const ZERO: Self = Self::splat(X64::ZERO);
 
@@ -116,8 +116,8 @@ impl Vec2 {
     /// Creates a 3D vector from `self` and the given `z` value.
     #[inline]
     #[must_use]
-    pub const fn extend(self, z: X64) -> Vec3 {
-        Vec3::new(self.x, self.y, z)
+    pub const fn extend(self, z: X64) -> XVec3 {
+        XVec3::new(self.x, self.y, z)
     }
 
     /// Computes the dot product of `self` and `rhs`.
@@ -594,8 +594,8 @@ impl Vec2 {
 
     /// Creates a 2D vector containing `[angle.cos(), angle.sin()]`. This can be used in
     /// conjunction with the [`rotate()`][Self::rotate()] method, e.g.
-    /// `Vec2::from_angle(PI).rotate(Vec2::Y)` will create the vector `[-1, 0]`
-    /// and rotate [`Vec2::Y`] around it returning `-Vec2::Y`.
+    /// `XVec2::from_angle(PI).rotate(XVec2::Y)` will create the vector `[-1, 0]`
+    /// and rotate [`XVec2::Y`] around it returning `-XVec2::Y`.
     #[inline]
     #[must_use]
     pub fn from_angle(angle: X64) -> Self {
@@ -659,14 +659,14 @@ impl Vec2 {
     }
 }
 
-impl Default for Vec2 {
+impl Default for XVec2 {
     #[inline(always)]
     fn default() -> Self {
         Self::ZERO
     }
 }
 
-impl Div<Vec2> for Vec2 {
+impl Div<XVec2> for XVec2 {
     type Output = Self;
     #[inline]
     fn div(self, rhs: Self) -> Self {
@@ -677,7 +677,7 @@ impl Div<Vec2> for Vec2 {
     }
 }
 
-impl DivAssign<Vec2> for Vec2 {
+impl DivAssign<XVec2> for XVec2 {
     #[inline]
     fn div_assign(&mut self, rhs: Self) {
         self.x.div_assign(rhs.x);
@@ -685,7 +685,7 @@ impl DivAssign<Vec2> for Vec2 {
     }
 }
 
-impl Div<X64> for Vec2 {
+impl Div<X64> for XVec2 {
     type Output = Self;
     #[inline]
     fn div(self, rhs: X64) -> Self {
@@ -696,7 +696,7 @@ impl Div<X64> for Vec2 {
     }
 }
 
-impl DivAssign<X64> for Vec2 {
+impl DivAssign<X64> for XVec2 {
     #[inline]
     fn div_assign(&mut self, rhs: X64) {
         self.x.div_assign(rhs);
@@ -704,18 +704,18 @@ impl DivAssign<X64> for Vec2 {
     }
 }
 
-impl Div<Vec2> for X64 {
-    type Output = Vec2;
+impl Div<XVec2> for X64 {
+    type Output = XVec2;
     #[inline]
-    fn div(self, rhs: Vec2) -> Vec2 {
-        Vec2 {
+    fn div(self, rhs: XVec2) -> XVec2 {
+        XVec2 {
             x: self.div(rhs.x),
             y: self.div(rhs.y),
         }
     }
 }
 
-impl Mul<Vec2> for Vec2 {
+impl Mul<XVec2> for XVec2 {
     type Output = Self;
     #[inline]
     fn mul(self, rhs: Self) -> Self {
@@ -726,7 +726,7 @@ impl Mul<Vec2> for Vec2 {
     }
 }
 
-impl MulAssign<Vec2> for Vec2 {
+impl MulAssign<XVec2> for XVec2 {
     #[inline]
     fn mul_assign(&mut self, rhs: Self) {
         self.x.mul_assign(rhs.x);
@@ -734,7 +734,7 @@ impl MulAssign<Vec2> for Vec2 {
     }
 }
 
-impl Mul<X64> for Vec2 {
+impl Mul<X64> for XVec2 {
     type Output = Self;
     #[inline]
     fn mul(self, rhs: X64) -> Self {
@@ -745,7 +745,7 @@ impl Mul<X64> for Vec2 {
     }
 }
 
-impl MulAssign<X64> for Vec2 {
+impl MulAssign<X64> for XVec2 {
     #[inline]
     fn mul_assign(&mut self, rhs: X64) {
         self.x.mul_assign(rhs);
@@ -753,18 +753,18 @@ impl MulAssign<X64> for Vec2 {
     }
 }
 
-impl Mul<Vec2> for X64 {
-    type Output = Vec2;
+impl Mul<XVec2> for X64 {
+    type Output = XVec2;
     #[inline]
-    fn mul(self, rhs: Vec2) -> Vec2 {
-        Vec2 {
+    fn mul(self, rhs: XVec2) -> XVec2 {
+        XVec2 {
             x: self.mul(rhs.x),
             y: self.mul(rhs.y),
         }
     }
 }
 
-impl Add<Vec2> for Vec2 {
+impl Add<XVec2> for XVec2 {
     type Output = Self;
     #[inline]
     fn add(self, rhs: Self) -> Self {
@@ -775,7 +775,7 @@ impl Add<Vec2> for Vec2 {
     }
 }
 
-impl AddAssign<Vec2> for Vec2 {
+impl AddAssign<XVec2> for XVec2 {
     #[inline]
     fn add_assign(&mut self, rhs: Self) {
         self.x.add_assign(rhs.x);
@@ -783,7 +783,7 @@ impl AddAssign<Vec2> for Vec2 {
     }
 }
 
-impl Add<X64> for Vec2 {
+impl Add<X64> for XVec2 {
     type Output = Self;
     #[inline]
     fn add(self, rhs: X64) -> Self {
@@ -794,7 +794,7 @@ impl Add<X64> for Vec2 {
     }
 }
 
-impl AddAssign<X64> for Vec2 {
+impl AddAssign<X64> for XVec2 {
     #[inline]
     fn add_assign(&mut self, rhs: X64) {
         self.x.add_assign(rhs);
@@ -802,18 +802,18 @@ impl AddAssign<X64> for Vec2 {
     }
 }
 
-impl Add<Vec2> for X64 {
-    type Output = Vec2;
+impl Add<XVec2> for X64 {
+    type Output = XVec2;
     #[inline]
-    fn add(self, rhs: Vec2) -> Vec2 {
-        Vec2 {
+    fn add(self, rhs: XVec2) -> XVec2 {
+        XVec2 {
             x: self.add(rhs.x),
             y: self.add(rhs.y),
         }
     }
 }
 
-impl Sub<Vec2> for Vec2 {
+impl Sub<XVec2> for XVec2 {
     type Output = Self;
     #[inline]
     fn sub(self, rhs: Self) -> Self {
@@ -824,15 +824,15 @@ impl Sub<Vec2> for Vec2 {
     }
 }
 
-impl SubAssign<Vec2> for Vec2 {
+impl SubAssign<XVec2> for XVec2 {
     #[inline]
-    fn sub_assign(&mut self, rhs: Vec2) {
+    fn sub_assign(&mut self, rhs: XVec2) {
         self.x.sub_assign(rhs.x);
         self.y.sub_assign(rhs.y);
     }
 }
 
-impl Sub<X64> for Vec2 {
+impl Sub<X64> for XVec2 {
     type Output = Self;
     #[inline]
     fn sub(self, rhs: X64) -> Self {
@@ -843,7 +843,7 @@ impl Sub<X64> for Vec2 {
     }
 }
 
-impl SubAssign<X64> for Vec2 {
+impl SubAssign<X64> for XVec2 {
     #[inline]
     fn sub_assign(&mut self, rhs: X64) {
         self.x.sub_assign(rhs);
@@ -851,18 +851,18 @@ impl SubAssign<X64> for Vec2 {
     }
 }
 
-impl Sub<Vec2> for X64 {
-    type Output = Vec2;
+impl Sub<XVec2> for X64 {
+    type Output = XVec2;
     #[inline]
-    fn sub(self, rhs: Vec2) -> Vec2 {
-        Vec2 {
+    fn sub(self, rhs: XVec2) -> XVec2 {
+        XVec2 {
             x: self.sub(rhs.x),
             y: self.sub(rhs.y),
         }
     }
 }
 
-impl Rem<Vec2> for Vec2 {
+impl Rem<XVec2> for XVec2 {
     type Output = Self;
     #[inline]
     fn rem(self, rhs: Self) -> Self {
@@ -873,7 +873,7 @@ impl Rem<Vec2> for Vec2 {
     }
 }
 
-impl RemAssign<Vec2> for Vec2 {
+impl RemAssign<XVec2> for XVec2 {
     #[inline]
     fn rem_assign(&mut self, rhs: Self) {
         self.x.rem_assign(rhs.x);
@@ -881,7 +881,7 @@ impl RemAssign<Vec2> for Vec2 {
     }
 }
 
-impl Rem<X64> for Vec2 {
+impl Rem<X64> for XVec2 {
     type Output = Self;
     #[inline]
     fn rem(self, rhs: X64) -> Self {
@@ -892,7 +892,7 @@ impl Rem<X64> for Vec2 {
     }
 }
 
-impl RemAssign<X64> for Vec2 {
+impl RemAssign<X64> for XVec2 {
     #[inline]
     fn rem_assign(&mut self, rhs: X64) {
         self.x.rem_assign(rhs);
@@ -900,11 +900,11 @@ impl RemAssign<X64> for Vec2 {
     }
 }
 
-impl Rem<Vec2> for X64 {
-    type Output = Vec2;
+impl Rem<XVec2> for X64 {
+    type Output = XVec2;
     #[inline]
-    fn rem(self, rhs: Vec2) -> Vec2 {
-        Vec2 {
+    fn rem(self, rhs: XVec2) -> XVec2 {
+        XVec2 {
             x: self.rem(rhs.x),
             y: self.rem(rhs.y),
         }
@@ -912,22 +912,22 @@ impl Rem<Vec2> for X64 {
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl AsRef<[X64; 2]> for Vec2 {
+impl AsRef<[X64; 2]> for XVec2 {
     #[inline]
     fn as_ref(&self) -> &[X64; 2] {
-        unsafe { &*(self as *const Vec2 as *const [X64; 2]) }
+        unsafe { &*(self as *const XVec2 as *const [X64; 2]) }
     }
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl AsMut<[X64; 2]> for Vec2 {
+impl AsMut<[X64; 2]> for XVec2 {
     #[inline]
     fn as_mut(&mut self) -> &mut [X64; 2] {
-        unsafe { &mut *(self as *mut Vec2 as *mut [X64; 2]) }
+        unsafe { &mut *(self as *mut XVec2 as *mut [X64; 2]) }
     }
 }
 
-impl Sum for Vec2 {
+impl Sum for XVec2 {
     #[inline]
     fn sum<I>(iter: I) -> Self
     where
@@ -937,7 +937,7 @@ impl Sum for Vec2 {
     }
 }
 
-impl<'a> Sum<&'a Self> for Vec2 {
+impl<'a> Sum<&'a Self> for XVec2 {
     #[inline]
     fn sum<I>(iter: I) -> Self
     where
@@ -947,7 +947,7 @@ impl<'a> Sum<&'a Self> for Vec2 {
     }
 }
 
-impl Product for Vec2 {
+impl Product for XVec2 {
     #[inline]
     fn product<I>(iter: I) -> Self
     where
@@ -957,7 +957,7 @@ impl Product for Vec2 {
     }
 }
 
-impl<'a> Product<&'a Self> for Vec2 {
+impl<'a> Product<&'a Self> for XVec2 {
     #[inline]
     fn product<I>(iter: I) -> Self
     where
@@ -967,7 +967,7 @@ impl<'a> Product<&'a Self> for Vec2 {
     }
 }
 
-impl Neg for Vec2 {
+impl Neg for XVec2 {
     type Output = Self;
     #[inline]
     fn neg(self) -> Self {
@@ -978,7 +978,7 @@ impl Neg for Vec2 {
     }
 }
 
-impl Index<usize> for Vec2 {
+impl Index<usize> for XVec2 {
     type Output = X64;
     #[inline]
     fn index(&self, index: usize) -> &Self::Output {
@@ -990,7 +990,7 @@ impl Index<usize> for Vec2 {
     }
 }
 
-impl IndexMut<usize> for Vec2 {
+impl IndexMut<usize> for XVec2 {
     #[inline]
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         match index {
@@ -1002,46 +1002,46 @@ impl IndexMut<usize> for Vec2 {
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl fmt::Display for Vec2 {
+impl fmt::Display for XVec2 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "[{}, {}]", self.x, self.y)
     }
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl fmt::Debug for Vec2 {
+impl fmt::Debug for XVec2 {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt.debug_tuple(stringify!(Vec2))
+        fmt.debug_tuple(stringify!(XVec2))
             .field(&self.x)
             .field(&self.y)
             .finish()
     }
 }
 
-impl From<[X64; 2]> for Vec2 {
+impl From<[X64; 2]> for XVec2 {
     #[inline]
     fn from(a: [X64; 2]) -> Self {
         Self::new(a[0], a[1])
     }
 }
 
-impl From<Vec2> for [X64; 2] {
+impl From<XVec2> for [X64; 2] {
     #[inline]
-    fn from(v: Vec2) -> Self {
+    fn from(v: XVec2) -> Self {
         [v.x, v.y]
     }
 }
 
-impl From<(X64, X64)> for Vec2 {
+impl From<(X64, X64)> for XVec2 {
     #[inline]
     fn from(t: (X64, X64)) -> Self {
         Self::new(t.0, t.1)
     }
 }
 
-impl From<Vec2> for (X64, X64) {
+impl From<XVec2> for (X64, X64) {
     #[inline]
-    fn from(v: Vec2) -> Self {
+    fn from(v: XVec2) -> Self {
         (v.x, v.y)
     }
 }

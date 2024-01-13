@@ -8,41 +8,41 @@ use core::ops::{Deref, DerefMut, Mul, MulAssign};
 /// A 2D affine transform, which can represent translation, rotation, scaling and shear.
 #[derive(Copy, Clone)]
 #[repr(C)]
-pub struct Affine2 {
-    pub matrix2: Mat2,
-    pub translation: Vec2,
+pub struct XAffine2 {
+    pub matrix2: XMat2,
+    pub translation: XVec2,
 }
 
-impl Affine2 {
+impl XAffine2 {
     /// The degenerate zero transform.
     ///
     /// This transforms any finite vector and point to zero.
     /// The zero transform is non-invertible.
     pub const ZERO: Self = Self {
-        matrix2: Mat2::ZERO,
-        translation: Vec2::ZERO,
+        matrix2: XMat2::ZERO,
+        translation: XVec2::ZERO,
     };
 
     /// The identity transform.
     ///
     /// Multiplying a vector with this returns the same vector.
     pub const IDENTITY: Self = Self {
-        matrix2: Mat2::IDENTITY,
-        translation: Vec2::ZERO,
+        matrix2: XMat2::IDENTITY,
+        translation: XVec2::ZERO,
     };
 
     /// All NAN:s.
     pub const NAN: Self = Self {
-        matrix2: Mat2::NAN,
-        translation: Vec2::NAN,
+        matrix2: XMat2::NAN,
+        translation: XVec2::NAN,
     };
 
     /// Creates an affine transform from three column vectors.
     #[inline(always)]
     #[must_use]
-    pub const fn from_cols(x_axis: Vec2, y_axis: Vec2, z_axis: Vec2) -> Self {
+    pub const fn from_cols(x_axis: XVec2, y_axis: XVec2, z_axis: XVec2) -> Self {
         Self {
-            matrix2: Mat2::from_cols(x_axis, y_axis),
+            matrix2: XMat2::from_cols(x_axis, y_axis),
             translation: z_axis,
         }
     }
@@ -52,8 +52,8 @@ impl Affine2 {
     #[must_use]
     pub fn from_cols_array(m: &[X64; 6]) -> Self {
         Self {
-            matrix2: Mat2::from_cols_slice(&m[0..4]),
-            translation: Vec2::from_slice(&m[4..6]),
+            matrix2: XMat2::from_cols_slice(&m[0..4]),
+            translation: XVec2::from_slice(&m[4..6]),
         }
     }
 
@@ -75,7 +75,7 @@ impl Affine2 {
     #[must_use]
     pub fn from_cols_array_2d(m: &[[X64; 2]; 3]) -> Self {
         Self {
-            matrix2: Mat2::from_cols(m[0].into(), m[1].into()),
+            matrix2: XMat2::from_cols(m[0].into(), m[1].into()),
             translation: m[2].into(),
         }
     }
@@ -102,8 +102,8 @@ impl Affine2 {
     #[must_use]
     pub fn from_cols_slice(slice: &[X64]) -> Self {
         Self {
-            matrix2: Mat2::from_cols_slice(&slice[0..4]),
-            translation: Vec2::from_slice(&slice[4..6]),
+            matrix2: XMat2::from_cols_slice(&slice[0..4]),
+            translation: XVec2::from_slice(&slice[4..6]),
         }
     }
 
@@ -122,10 +122,10 @@ impl Affine2 {
     /// Note that if any scale is zero the transform will be non-invertible.
     #[inline]
     #[must_use]
-    pub fn from_scale(scale: Vec2) -> Self {
+    pub fn from_scale(scale: XVec2) -> Self {
         Self {
-            matrix2: Mat2::from_diagonal(scale),
-            translation: Vec2::ZERO,
+            matrix2: XMat2::from_diagonal(scale),
+            translation: XVec2::ZERO,
         }
     }
 
@@ -134,17 +134,17 @@ impl Affine2 {
     #[must_use]
     pub fn from_angle(angle: X64) -> Self {
         Self {
-            matrix2: Mat2::from_angle(angle),
-            translation: Vec2::ZERO,
+            matrix2: XMat2::from_angle(angle),
+            translation: XVec2::ZERO,
         }
     }
 
     /// Creates an affine transformation from the given 2D `translation`.
     #[inline]
     #[must_use]
-    pub fn from_translation(translation: Vec2) -> Self {
+    pub fn from_translation(translation: XVec2) -> Self {
         Self {
-            matrix2: Mat2::IDENTITY,
+            matrix2: XMat2::IDENTITY,
             translation,
         }
     }
@@ -152,10 +152,10 @@ impl Affine2 {
     /// Creates an affine transform from a 2x2 matrix (expressing scale, shear and rotation)
     #[inline]
     #[must_use]
-    pub fn from_mat2(matrix2: Mat2) -> Self {
+    pub fn from_mat2(matrix2: XMat2) -> Self {
         Self {
             matrix2,
-            translation: Vec2::ZERO,
+            translation: XVec2::ZERO,
         }
     }
 
@@ -163,10 +163,10 @@ impl Affine2 {
     /// translation vector.
     ///
     /// Equivalent to
-    /// `Affine2::from_translation(translation) * Affine2::from_mat2(mat2)`
+    /// `XAffine2::from_translation(translation) * XAffine2::from_mat2(mat2)`
     #[inline]
     #[must_use]
-    pub fn from_mat2_translation(matrix2: Mat2, translation: Vec2) -> Self {
+    pub fn from_mat2_translation(matrix2: XMat2, translation: XVec2) -> Self {
         Self {
             matrix2,
             translation,
@@ -176,14 +176,14 @@ impl Affine2 {
     /// Creates an affine transform from the given 2D `scale`, rotation `angle` (in radians) and
     /// `translation`.
     ///
-    /// Equivalent to `Affine2::from_translation(translation) *
-    /// Affine2::from_angle(angle) * Affine2::from_scale(scale)`
+    /// Equivalent to `XAffine2::from_translation(translation) *
+    /// XAffine2::from_angle(angle) * XAffine2::from_scale(scale)`
     #[inline]
     #[must_use]
-    pub fn from_scale_angle_translation(scale: Vec2, angle: X64, translation: Vec2) -> Self {
-        let rotation = Mat2::from_angle(angle);
+    pub fn from_scale_angle_translation(scale: XVec2, angle: X64, translation: XVec2) -> Self {
+        let rotation = XMat2::from_angle(angle);
         Self {
-            matrix2: Mat2::from_cols(rotation.x_axis * scale.x, rotation.y_axis * scale.y),
+            matrix2: XMat2::from_cols(rotation.x_axis * scale.x, rotation.y_axis * scale.y),
             translation,
         }
     }
@@ -191,22 +191,22 @@ impl Affine2 {
     /// Creates an affine transform from the given 2D rotation `angle` (in radians) and
     /// `translation`.
     ///
-    /// Equivalent to `Affine2::from_translation(translation) * Affine2::from_angle(angle)`
+    /// Equivalent to `XAffine2::from_translation(translation) * XAffine2::from_angle(angle)`
     #[inline]
     #[must_use]
-    pub fn from_angle_translation(angle: X64, translation: Vec2) -> Self {
+    pub fn from_angle_translation(angle: X64, translation: XVec2) -> Self {
         Self {
-            matrix2: Mat2::from_angle(angle),
+            matrix2: XMat2::from_angle(angle),
             translation,
         }
     }
 
-    /// The given `Mat3` must be an affine transform,
+    /// The given `XMat3` must be an affine transform,
     #[inline]
     #[must_use]
-    pub fn from_mat3(m: Mat3) -> Self {
+    pub fn from_mat3(m: XMat3) -> Self {
         Self {
-            matrix2: Mat2::from_cols(m.x_axis.truncate(), m.y_axis.truncate()),
+            matrix2: XMat2::from_cols(m.x_axis.truncate(), m.y_axis.truncate()),
             translation: m.z_axis.truncate(),
         }
     }
@@ -222,11 +222,11 @@ impl Affine2 {
     /// vector contains any zero elements when `assert` is enabled.
     #[inline]
     #[must_use]
-    pub fn to_scale_angle_translation(self) -> (Vec2, X64, Vec2) {
+    pub fn to_scale_angle_translation(self) -> (XVec2, X64, XVec2) {
         let det = self.matrix2.determinant();
         assert!(det != 0.0);
 
-        let scale = Vec2::new(
+        let scale = XVec2::new(
             self.matrix2.x_axis.length() * det.signum(),
             self.matrix2.y_axis.length(),
         );
@@ -241,7 +241,7 @@ impl Affine2 {
     /// Transforms the given 2D point, applying shear, scale, rotation and translation.
     #[inline]
     #[must_use]
-    pub fn transform_point2(&self, rhs: Vec2) -> Vec2 {
+    pub fn transform_point2(&self, rhs: XVec2) -> XVec2 {
         self.matrix2 * rhs + self.translation
     }
 
@@ -250,7 +250,7 @@ impl Affine2 {
     ///
     /// To also apply translation, use [`Self::transform_point2()`] instead.
     #[inline]
-    pub fn transform_vector2(&self, rhs: Vec2) -> Vec2 {
+    pub fn transform_vector2(&self, rhs: XVec2) -> XVec2 {
         self.matrix2 * rhs
     }
 
@@ -304,29 +304,29 @@ impl Affine2 {
     }
 }
 
-impl Default for Affine2 {
+impl Default for XAffine2 {
     #[inline(always)]
     fn default() -> Self {
         Self::IDENTITY
     }
 }
 
-impl Deref for Affine2 {
-    type Target = crate::deref::Cols3<Vec2>;
+impl Deref for XAffine2 {
+    type Target = crate::deref::Cols3<XVec2>;
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
         unsafe { &*(self as *const Self as *const Self::Target) }
     }
 }
 
-impl DerefMut for Affine2 {
+impl DerefMut for XAffine2 {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
         unsafe { &mut *(self as *mut Self as *mut Self::Target) }
     }
 }
 
-impl PartialEq for Affine2 {
+impl PartialEq for XAffine2 {
     #[inline]
     fn eq(&self, rhs: &Self) -> bool {
         self.matrix2.eq(&rhs.matrix2) && self.translation.eq(&rhs.translation)
@@ -334,9 +334,9 @@ impl PartialEq for Affine2 {
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl core::fmt::Debug for Affine2 {
+impl core::fmt::Debug for XAffine2 {
     fn fmt(&self, fmt: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        fmt.debug_struct(stringify!(Affine2))
+        fmt.debug_struct(stringify!(XAffine2))
             .field("matrix2", &self.matrix2)
             .field("translation", &self.translation)
             .finish()
@@ -344,7 +344,7 @@ impl core::fmt::Debug for Affine2 {
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl core::fmt::Display for Affine2 {
+impl core::fmt::Display for XAffine2 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
@@ -354,7 +354,7 @@ impl core::fmt::Display for Affine2 {
     }
 }
 
-impl<'a> core::iter::Product<&'a Self> for Affine2 {
+impl<'a> core::iter::Product<&'a Self> for XAffine2 {
     fn product<I>(iter: I) -> Self
     where
         I: Iterator<Item = &'a Self>,
@@ -363,11 +363,11 @@ impl<'a> core::iter::Product<&'a Self> for Affine2 {
     }
 }
 
-impl Mul for Affine2 {
-    type Output = Affine2;
+impl Mul for XAffine2 {
+    type Output = XAffine2;
 
     #[inline]
-    fn mul(self, rhs: Affine2) -> Self::Output {
+    fn mul(self, rhs: XAffine2) -> Self::Output {
         Self {
             matrix2: self.matrix2 * rhs.matrix2,
             translation: self.matrix2 * rhs.translation + self.translation,
@@ -375,16 +375,16 @@ impl Mul for Affine2 {
     }
 }
 
-impl MulAssign for Affine2 {
+impl MulAssign for XAffine2 {
     #[inline]
-    fn mul_assign(&mut self, rhs: Affine2) {
+    fn mul_assign(&mut self, rhs: XAffine2) {
         *self = self.mul(rhs);
     }
 }
 
-impl From<Affine2> for Mat3 {
+impl From<XAffine2> for XMat3 {
     #[inline]
-    fn from(m: Affine2) -> Mat3 {
+    fn from(m: XAffine2) -> XMat3 {
         Self::from_cols(
             m.matrix2.x_axis.extend(X64::ZERO),
             m.matrix2.y_axis.extend(X64::ZERO),
@@ -393,20 +393,20 @@ impl From<Affine2> for Mat3 {
     }
 }
 
-impl Mul<Mat3> for Affine2 {
-    type Output = Mat3;
+impl Mul<XMat3> for XAffine2 {
+    type Output = XMat3;
 
     #[inline]
-    fn mul(self, rhs: Mat3) -> Self::Output {
-        Mat3::from(self) * rhs
+    fn mul(self, rhs: XMat3) -> Self::Output {
+        XMat3::from(self) * rhs
     }
 }
 
-impl Mul<Affine2> for Mat3 {
-    type Output = Mat3;
+impl Mul<XAffine2> for XMat3 {
+    type Output = XMat3;
 
     #[inline]
-    fn mul(self, rhs: Affine2) -> Self::Output {
-        self * Mat3::from(rhs)
+    fn mul(self, rhs: XAffine2) -> Self::Output {
+        self * XMat3::from(rhs)
     }
 }

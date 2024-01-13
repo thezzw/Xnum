@@ -10,8 +10,8 @@ use core::ops::*;
 /// Creates a 4-dimensional vector.
 #[inline(always)]
 #[must_use]
-pub const fn vec4(x: X64, y: X64, z: X64, w: X64) -> Vec4 {
-    Vec4::new(x, y, z, w)
+pub const fn vec4(x: X64, y: X64, z: X64, w: X64) -> XVec4 {
+    XVec4::new(x, y, z, w)
 }
 
 /// A 4-dimensional vector.
@@ -19,14 +19,14 @@ pub const fn vec4(x: X64, y: X64, z: X64, w: X64) -> Vec4 {
 #[cfg_attr(feature = "cuda", repr(align(16)))]
 #[cfg_attr(not(target_arch = "spirv"), repr(C))]
 #[cfg_attr(target_arch = "spirv", repr(simd))]
-pub struct Vec4 {
+pub struct XVec4 {
     pub x: X64,
     pub y: X64,
     pub z: X64,
     pub w: X64,
 }
 
-impl Vec4 {
+impl XVec4 {
     /// All zeroes.
     pub const ZERO: Self = Self::splat(X64::ZERO);
 
@@ -140,11 +140,11 @@ impl Vec4 {
 
     /// Creates a 3D vector from the `x`, `y` and `z` elements of `self`, discarding `w`.
     ///
-    /// Truncation to [`Vec3`] may also be performed by using [`self.xyz()`][crate::swizzles::Vec4Swizzles::xyz()].
+    /// Truncation to [`XVec3`] may also be performed by using [`self.xyz()`][crate::swizzles::Vec4Swizzles::xyz()].
     #[inline]
     #[must_use]
-    pub fn truncate(self) -> Vec3 {
-        Vec3::new(self.x, self.y, self.z)
+    pub fn truncate(self) -> XVec3 {
+        XVec3::new(self.x, self.y, self.z)
     }
 
     /// Creates a 4D vector with all elements set to `w`.
@@ -661,14 +661,14 @@ impl Vec4 {
     }
 }
 
-impl Default for Vec4 {
+impl Default for XVec4 {
     #[inline(always)]
     fn default() -> Self {
         Self::ZERO
     }
 }
 
-impl Div<Vec4> for Vec4 {
+impl Div<XVec4> for XVec4 {
     type Output = Self;
     #[inline]
     fn div(self, rhs: Self) -> Self {
@@ -681,7 +681,7 @@ impl Div<Vec4> for Vec4 {
     }
 }
 
-impl DivAssign<Vec4> for Vec4 {
+impl DivAssign<XVec4> for XVec4 {
     #[inline]
     fn div_assign(&mut self, rhs: Self) {
         self.x.div_assign(rhs.x);
@@ -691,7 +691,7 @@ impl DivAssign<Vec4> for Vec4 {
     }
 }
 
-impl Div<X64> for Vec4 {
+impl Div<X64> for XVec4 {
     type Output = Self;
     #[inline]
     fn div(self, rhs: X64) -> Self {
@@ -704,7 +704,7 @@ impl Div<X64> for Vec4 {
     }
 }
 
-impl DivAssign<X64> for Vec4 {
+impl DivAssign<X64> for XVec4 {
     #[inline]
     fn div_assign(&mut self, rhs: X64) {
         self.x.div_assign(rhs);
@@ -714,11 +714,11 @@ impl DivAssign<X64> for Vec4 {
     }
 }
 
-impl Div<Vec4> for X64 {
-    type Output = Vec4;
+impl Div<XVec4> for X64 {
+    type Output = XVec4;
     #[inline]
-    fn div(self, rhs: Vec4) -> Vec4 {
-        Vec4 {
+    fn div(self, rhs: XVec4) -> XVec4 {
+        XVec4 {
             x: self.div(rhs.x),
             y: self.div(rhs.y),
             z: self.div(rhs.z),
@@ -727,7 +727,7 @@ impl Div<Vec4> for X64 {
     }
 }
 
-impl Mul<Vec4> for Vec4 {
+impl Mul<XVec4> for XVec4 {
     type Output = Self;
     #[inline]
     fn mul(self, rhs: Self) -> Self {
@@ -740,7 +740,7 @@ impl Mul<Vec4> for Vec4 {
     }
 }
 
-impl MulAssign<Vec4> for Vec4 {
+impl MulAssign<XVec4> for XVec4 {
     #[inline]
     fn mul_assign(&mut self, rhs: Self) {
         self.x.mul_assign(rhs.x);
@@ -750,7 +750,7 @@ impl MulAssign<Vec4> for Vec4 {
     }
 }
 
-impl Mul<X64> for Vec4 {
+impl Mul<X64> for XVec4 {
     type Output = Self;
     #[inline]
     fn mul(self, rhs: X64) -> Self {
@@ -763,7 +763,7 @@ impl Mul<X64> for Vec4 {
     }
 }
 
-impl MulAssign<X64> for Vec4 {
+impl MulAssign<X64> for XVec4 {
     #[inline]
     fn mul_assign(&mut self, rhs: X64) {
         self.x.mul_assign(rhs);
@@ -773,11 +773,11 @@ impl MulAssign<X64> for Vec4 {
     }
 }
 
-impl Mul<Vec4> for X64 {
-    type Output = Vec4;
+impl Mul<XVec4> for X64 {
+    type Output = XVec4;
     #[inline]
-    fn mul(self, rhs: Vec4) -> Vec4 {
-        Vec4 {
+    fn mul(self, rhs: XVec4) -> XVec4 {
+        XVec4 {
             x: self.mul(rhs.x),
             y: self.mul(rhs.y),
             z: self.mul(rhs.z),
@@ -786,7 +786,7 @@ impl Mul<Vec4> for X64 {
     }
 }
 
-impl Add<Vec4> for Vec4 {
+impl Add<XVec4> for XVec4 {
     type Output = Self;
     #[inline]
     fn add(self, rhs: Self) -> Self {
@@ -799,7 +799,7 @@ impl Add<Vec4> for Vec4 {
     }
 }
 
-impl AddAssign<Vec4> for Vec4 {
+impl AddAssign<XVec4> for XVec4 {
     #[inline]
     fn add_assign(&mut self, rhs: Self) {
         self.x.add_assign(rhs.x);
@@ -809,7 +809,7 @@ impl AddAssign<Vec4> for Vec4 {
     }
 }
 
-impl Add<X64> for Vec4 {
+impl Add<X64> for XVec4 {
     type Output = Self;
     #[inline]
     fn add(self, rhs: X64) -> Self {
@@ -822,7 +822,7 @@ impl Add<X64> for Vec4 {
     }
 }
 
-impl AddAssign<X64> for Vec4 {
+impl AddAssign<X64> for XVec4 {
     #[inline]
     fn add_assign(&mut self, rhs: X64) {
         self.x.add_assign(rhs);
@@ -832,11 +832,11 @@ impl AddAssign<X64> for Vec4 {
     }
 }
 
-impl Add<Vec4> for X64 {
-    type Output = Vec4;
+impl Add<XVec4> for X64 {
+    type Output = XVec4;
     #[inline]
-    fn add(self, rhs: Vec4) -> Vec4 {
-        Vec4 {
+    fn add(self, rhs: XVec4) -> XVec4 {
+        XVec4 {
             x: self.add(rhs.x),
             y: self.add(rhs.y),
             z: self.add(rhs.z),
@@ -845,7 +845,7 @@ impl Add<Vec4> for X64 {
     }
 }
 
-impl Sub<Vec4> for Vec4 {
+impl Sub<XVec4> for XVec4 {
     type Output = Self;
     #[inline]
     fn sub(self, rhs: Self) -> Self {
@@ -858,9 +858,9 @@ impl Sub<Vec4> for Vec4 {
     }
 }
 
-impl SubAssign<Vec4> for Vec4 {
+impl SubAssign<XVec4> for XVec4 {
     #[inline]
-    fn sub_assign(&mut self, rhs: Vec4) {
+    fn sub_assign(&mut self, rhs: XVec4) {
         self.x.sub_assign(rhs.x);
         self.y.sub_assign(rhs.y);
         self.z.sub_assign(rhs.z);
@@ -868,7 +868,7 @@ impl SubAssign<Vec4> for Vec4 {
     }
 }
 
-impl Sub<X64> for Vec4 {
+impl Sub<X64> for XVec4 {
     type Output = Self;
     #[inline]
     fn sub(self, rhs: X64) -> Self {
@@ -881,7 +881,7 @@ impl Sub<X64> for Vec4 {
     }
 }
 
-impl SubAssign<X64> for Vec4 {
+impl SubAssign<X64> for XVec4 {
     #[inline]
     fn sub_assign(&mut self, rhs: X64) {
         self.x.sub_assign(rhs);
@@ -891,11 +891,11 @@ impl SubAssign<X64> for Vec4 {
     }
 }
 
-impl Sub<Vec4> for X64 {
-    type Output = Vec4;
+impl Sub<XVec4> for X64 {
+    type Output = XVec4;
     #[inline]
-    fn sub(self, rhs: Vec4) -> Vec4 {
-        Vec4 {
+    fn sub(self, rhs: XVec4) -> XVec4 {
+        XVec4 {
             x: self.sub(rhs.x),
             y: self.sub(rhs.y),
             z: self.sub(rhs.z),
@@ -904,7 +904,7 @@ impl Sub<Vec4> for X64 {
     }
 }
 
-impl Rem<Vec4> for Vec4 {
+impl Rem<XVec4> for XVec4 {
     type Output = Self;
     #[inline]
     fn rem(self, rhs: Self) -> Self {
@@ -917,7 +917,7 @@ impl Rem<Vec4> for Vec4 {
     }
 }
 
-impl RemAssign<Vec4> for Vec4 {
+impl RemAssign<XVec4> for XVec4 {
     #[inline]
     fn rem_assign(&mut self, rhs: Self) {
         self.x.rem_assign(rhs.x);
@@ -927,7 +927,7 @@ impl RemAssign<Vec4> for Vec4 {
     }
 }
 
-impl Rem<X64> for Vec4 {
+impl Rem<X64> for XVec4 {
     type Output = Self;
     #[inline]
     fn rem(self, rhs: X64) -> Self {
@@ -940,7 +940,7 @@ impl Rem<X64> for Vec4 {
     }
 }
 
-impl RemAssign<X64> for Vec4 {
+impl RemAssign<X64> for XVec4 {
     #[inline]
     fn rem_assign(&mut self, rhs: X64) {
         self.x.rem_assign(rhs);
@@ -950,11 +950,11 @@ impl RemAssign<X64> for Vec4 {
     }
 }
 
-impl Rem<Vec4> for X64 {
-    type Output = Vec4;
+impl Rem<XVec4> for X64 {
+    type Output = XVec4;
     #[inline]
-    fn rem(self, rhs: Vec4) -> Vec4 {
-        Vec4 {
+    fn rem(self, rhs: XVec4) -> XVec4 {
+        XVec4 {
             x: self.rem(rhs.x),
             y: self.rem(rhs.y),
             z: self.rem(rhs.z),
@@ -964,22 +964,22 @@ impl Rem<Vec4> for X64 {
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl AsRef<[X64; 4]> for Vec4 {
+impl AsRef<[X64; 4]> for XVec4 {
     #[inline]
     fn as_ref(&self) -> &[X64; 4] {
-        unsafe { &*(self as *const Vec4 as *const [X64; 4]) }
+        unsafe { &*(self as *const XVec4 as *const [X64; 4]) }
     }
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl AsMut<[X64; 4]> for Vec4 {
+impl AsMut<[X64; 4]> for XVec4 {
     #[inline]
     fn as_mut(&mut self) -> &mut [X64; 4] {
-        unsafe { &mut *(self as *mut Vec4 as *mut [X64; 4]) }
+        unsafe { &mut *(self as *mut XVec4 as *mut [X64; 4]) }
     }
 }
 
-impl Sum for Vec4 {
+impl Sum for XVec4 {
     #[inline]
     fn sum<I>(iter: I) -> Self
     where
@@ -989,7 +989,7 @@ impl Sum for Vec4 {
     }
 }
 
-impl<'a> Sum<&'a Self> for Vec4 {
+impl<'a> Sum<&'a Self> for XVec4 {
     #[inline]
     fn sum<I>(iter: I) -> Self
     where
@@ -999,7 +999,7 @@ impl<'a> Sum<&'a Self> for Vec4 {
     }
 }
 
-impl Product for Vec4 {
+impl Product for XVec4 {
     #[inline]
     fn product<I>(iter: I) -> Self
     where
@@ -1009,7 +1009,7 @@ impl Product for Vec4 {
     }
 }
 
-impl<'a> Product<&'a Self> for Vec4 {
+impl<'a> Product<&'a Self> for XVec4 {
     #[inline]
     fn product<I>(iter: I) -> Self
     where
@@ -1019,7 +1019,7 @@ impl<'a> Product<&'a Self> for Vec4 {
     }
 }
 
-impl Neg for Vec4 {
+impl Neg for XVec4 {
     type Output = Self;
     #[inline]
     fn neg(self) -> Self {
@@ -1032,7 +1032,7 @@ impl Neg for Vec4 {
     }
 }
 
-impl Index<usize> for Vec4 {
+impl Index<usize> for XVec4 {
     type Output = X64;
     #[inline]
     fn index(&self, index: usize) -> &Self::Output {
@@ -1046,7 +1046,7 @@ impl Index<usize> for Vec4 {
     }
 }
 
-impl IndexMut<usize> for Vec4 {
+impl IndexMut<usize> for XVec4 {
     #[inline]
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         match index {
@@ -1060,16 +1060,16 @@ impl IndexMut<usize> for Vec4 {
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl fmt::Display for Vec4 {
+impl fmt::Display for XVec4 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "[{}, {}, {}, {}]", self.x, self.y, self.z, self.w)
     }
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl fmt::Debug for Vec4 {
+impl fmt::Debug for XVec4 {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt.debug_tuple(stringify!(Vec4))
+        fmt.debug_tuple(stringify!(XVec4))
             .field(&self.x)
             .field(&self.y)
             .field(&self.z)
@@ -1078,58 +1078,58 @@ impl fmt::Debug for Vec4 {
     }
 }
 
-impl From<[X64; 4]> for Vec4 {
+impl From<[X64; 4]> for XVec4 {
     #[inline]
     fn from(a: [X64; 4]) -> Self {
         Self::new(a[0], a[1], a[2], a[3])
     }
 }
 
-impl From<Vec4> for [X64; 4] {
+impl From<XVec4> for [X64; 4] {
     #[inline]
-    fn from(v: Vec4) -> Self {
+    fn from(v: XVec4) -> Self {
         [v.x, v.y, v.z, v.w]
     }
 }
 
-impl From<(X64, X64, X64, X64)> for Vec4 {
+impl From<(X64, X64, X64, X64)> for XVec4 {
     #[inline]
     fn from(t: (X64, X64, X64, X64)) -> Self {
         Self::new(t.0, t.1, t.2, t.3)
     }
 }
 
-impl From<Vec4> for (X64, X64, X64, X64) {
+impl From<XVec4> for (X64, X64, X64, X64) {
     #[inline]
-    fn from(v: Vec4) -> Self {
+    fn from(v: XVec4) -> Self {
         (v.x, v.y, v.z, v.w)
     }
 }
 
-impl From<(Vec3, X64)> for Vec4 {
+impl From<(XVec3, X64)> for XVec4 {
     #[inline]
-    fn from((v, w): (Vec3, X64)) -> Self {
+    fn from((v, w): (XVec3, X64)) -> Self {
         Self::new(v.x, v.y, v.z, w)
     }
 }
 
-impl From<(X64, Vec3)> for Vec4 {
+impl From<(X64, XVec3)> for XVec4 {
     #[inline]
-    fn from((x, v): (X64, Vec3)) -> Self {
+    fn from((x, v): (X64, XVec3)) -> Self {
         Self::new(x, v.x, v.y, v.z)
     }
 }
 
-impl From<(Vec2, X64, X64)> for Vec4 {
+impl From<(XVec2, X64, X64)> for XVec4 {
     #[inline]
-    fn from((v, z, w): (Vec2, X64, X64)) -> Self {
+    fn from((v, z, w): (XVec2, X64, X64)) -> Self {
         Self::new(v.x, v.y, z, w)
     }
 }
 
-impl From<(Vec2, Vec2)> for Vec4 {
+impl From<(XVec2, XVec2)> for XVec4 {
     #[inline]
-    fn from((v, u): (Vec2, Vec2)) -> Self {
+    fn from((v, u): (XVec2, XVec2)) -> Self {
         Self::new(v.x, v.y, u.x, u.y)
     }
 }

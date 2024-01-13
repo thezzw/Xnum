@@ -14,8 +14,8 @@ use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 /// Creates a 3x3 matrix from three column vectors.
 #[inline(always)]
 #[must_use]
-pub const fn mat3(x_axis: Vec3, y_axis: Vec3, z_axis: Vec3) -> Mat3 {
-    Mat3::from_cols(x_axis, y_axis, z_axis)
+pub const fn mat3(x_axis: XVec3, y_axis: XVec3, z_axis: XVec3) -> XMat3 {
+    XMat3::from_cols(x_axis, y_axis, z_axis)
 }
 
 /// A 3x3 column major matrix.
@@ -44,21 +44,21 @@ pub const fn mat3(x_axis: Vec3, y_axis: Vec3, z_axis: Vec3) -> Mat3 {
 /// transform.
 #[derive(Clone, Copy)]
 #[repr(C)]
-pub struct Mat3 {
-    pub x_axis: Vec3,
-    pub y_axis: Vec3,
-    pub z_axis: Vec3,
+pub struct XMat3 {
+    pub x_axis: XVec3,
+    pub y_axis: XVec3,
+    pub z_axis: XVec3,
 }
 
-impl Mat3 {
+impl XMat3 {
     /// A 3x3 matrix with all elements set to `X64::ZERO`.
-    pub const ZERO: Self = Self::from_cols(Vec3::ZERO, Vec3::ZERO, Vec3::ZERO);
+    pub const ZERO: Self = Self::from_cols(XVec3::ZERO, XVec3::ZERO, XVec3::ZERO);
 
     /// A 3x3 identity matrix, where all diagonal elements are `1`, and all off-diagonal elements are `0`.
-    pub const IDENTITY: Self = Self::from_cols(Vec3::X, Vec3::Y, Vec3::Z);
+    pub const IDENTITY: Self = Self::from_cols(XVec3::X, XVec3::Y, XVec3::Z);
 
     /// All NAN:s.
-    pub const NAN: Self = Self::from_cols(Vec3::NAN, Vec3::NAN, Vec3::NAN);
+    pub const NAN: Self = Self::from_cols(XVec3::NAN, XVec3::NAN, XVec3::NAN);
 
     #[allow(clippy::too_many_arguments)]
     #[inline(always)]
@@ -75,16 +75,16 @@ impl Mat3 {
         m22: X64,
     ) -> Self {
         Self {
-            x_axis: Vec3::new(m00, m01, m02),
-            y_axis: Vec3::new(m10, m11, m12),
-            z_axis: Vec3::new(m20, m21, m22),
+            x_axis: XVec3::new(m00, m01, m02),
+            y_axis: XVec3::new(m10, m11, m12),
+            z_axis: XVec3::new(m20, m21, m22),
         }
     }
 
     /// Creates a 3x3 matrix from three column vectors.
     #[inline(always)]
     #[must_use]
-    pub const fn from_cols(x_axis: Vec3, y_axis: Vec3, z_axis: Vec3) -> Self {
+    pub const fn from_cols(x_axis: XVec3, y_axis: XVec3, z_axis: XVec3) -> Self {
         Self {
             x_axis,
             y_axis,
@@ -126,9 +126,9 @@ impl Mat3 {
     #[must_use]
     pub const fn from_cols_array_2d(m: &[[X64; 3]; 3]) -> Self {
         Self::from_cols(
-            Vec3::from_array(m[0]),
-            Vec3::from_array(m[1]),
-            Vec3::from_array(m[2]),
+            XVec3::from_array(m[0]),
+            XVec3::from_array(m[1]),
+            XVec3::from_array(m[2]),
         )
     }
 
@@ -148,7 +148,7 @@ impl Mat3 {
     #[doc(alias = "scale")]
     #[inline]
     #[must_use]
-    pub const fn from_diagonal(diagonal: Vec3) -> Self {
+    pub const fn from_diagonal(diagonal: XVec3) -> Self {
         Self::new(
             diagonal.x, X64::ZERO, X64::ZERO, X64::ZERO, diagonal.y, X64::ZERO, X64::ZERO, X64::ZERO, diagonal.z,
         )
@@ -157,7 +157,7 @@ impl Mat3 {
     /// Creates a 3x3 matrix from a 4x4 matrix, discarding the 4th row and column.
     #[inline]
     #[must_use]
-    pub fn from_mat4(m: Mat4) -> Self {
+    pub fn from_mat4(m: XMat4) -> Self {
         Self::from_cols(m.x_axis.truncate(), m.y_axis.truncate(), m.z_axis.truncate())
     }
 
@@ -168,7 +168,7 @@ impl Mat3 {
     /// Will panic if `rotation` is not normalized when `assert` is enabled.
     #[inline]
     #[must_use]
-    pub fn from_quat(rotation: Quat) -> Self {
+    pub fn from_quat(rotation: XQuat) -> Self {
         assert!(rotation.is_normalized());
 
         let x2 = rotation.x + rotation.x;
@@ -185,9 +185,9 @@ impl Mat3 {
         let wz = rotation.w * z2;
 
         Self::from_cols(
-            Vec3::new(X64::ONE - (yy + zz), xy + wz, xz - wy),
-            Vec3::new(xy - wz, X64::ONE - (xx + zz), yz + wx),
-            Vec3::new(xz + wy, yz - wx, X64::ONE - (xx + yy)),
+            XVec3::new(X64::ONE - (yy + zz), xy + wz, xz - wy),
+            XVec3::new(xy - wz, X64::ONE - (xx + zz), yz + wx),
+            XVec3::new(xz + wy, yz - wx, X64::ONE - (xx + yy)),
         )
     }
 
@@ -199,7 +199,7 @@ impl Mat3 {
     /// Will panic if `axis` is not normalized when `assert` is enabled.
     #[inline]
     #[must_use]
-    pub fn from_axis_angle(axis: Vec3, angle: X64) -> Self {
+    pub fn from_axis_angle(axis: XVec3, angle: X64) -> Self {
         assert!(axis.is_normalized());
 
         let (sin, cos) = angle.sin_cos();
@@ -211,9 +211,9 @@ impl Mat3 {
         let xzomc = x * z * omc;
         let yzomc = y * z * omc;
         Self::from_cols(
-            Vec3::new(x2 * omc + cos, xyomc + zsin, xzomc - ysin),
-            Vec3::new(xyomc - zsin, y2 * omc + cos, yzomc + xsin),
-            Vec3::new(xzomc + ysin, yzomc - xsin, z2 * omc + cos),
+            XVec3::new(x2 * omc + cos, xyomc + zsin, xzomc - ysin),
+            XVec3::new(xyomc - zsin, y2 * omc + cos, yzomc + xsin),
+            XVec3::new(xzomc + ysin, yzomc - xsin, z2 * omc + cos),
         )
     }
 
@@ -221,8 +221,8 @@ impl Mat3 {
     /// radians).
     #[inline]
     #[must_use]
-    pub fn from_euler(order: EulerRot, a: X64, b: X64, c: X64) -> Self {
-        let quat = Quat::from_euler(order, a, b, c);
+    pub fn from_euler(order: XEulerRot, a: X64, b: X64, c: X64) -> Self {
+        let quat = XQuat::from_euler(order, a, b, c);
         Self::from_quat(quat)
     }
 
@@ -232,9 +232,9 @@ impl Mat3 {
     pub fn from_rotation_x(angle: X64) -> Self {
         let (sina, cosa) = angle.sin_cos();
         Self::from_cols(
-            Vec3::X,
-            Vec3::new(X64::ZERO, cosa, sina),
-            Vec3::new(X64::ZERO, -sina, cosa),
+            XVec3::X,
+            XVec3::new(X64::ZERO, cosa, sina),
+            XVec3::new(X64::ZERO, -sina, cosa),
         )
     }
 
@@ -244,9 +244,9 @@ impl Mat3 {
     pub fn from_rotation_y(angle: X64) -> Self {
         let (sina, cosa) = angle.sin_cos();
         Self::from_cols(
-            Vec3::new(cosa, X64::ZERO, -sina),
-            Vec3::Y,
-            Vec3::new(sina, X64::ZERO, cosa),
+            XVec3::new(cosa, X64::ZERO, -sina),
+            XVec3::Y,
+            XVec3::new(sina, X64::ZERO, cosa),
         )
     }
 
@@ -256,9 +256,9 @@ impl Mat3 {
     pub fn from_rotation_z(angle: X64) -> Self {
         let (sina, cosa) = angle.sin_cos();
         Self::from_cols(
-            Vec3::new(cosa, sina, X64::ZERO),
-            Vec3::new(-sina, cosa, X64::ZERO),
-            Vec3::Z,
+            XVec3::new(cosa, sina, X64::ZERO),
+            XVec3::new(-sina, cosa, X64::ZERO),
+            XVec3::Z,
         )
     }
 
@@ -268,11 +268,11 @@ impl Mat3 {
     /// [`Self::transform_point2()`] and [`Self::transform_vector2()`].
     #[inline]
     #[must_use]
-    pub fn from_translation(translation: Vec2) -> Self {
+    pub fn from_translation(translation: XVec2) -> Self {
         Self::from_cols(
-            Vec3::X,
-            Vec3::Y,
-            Vec3::new(translation.x, translation.y, X64::ONE),
+            XVec3::X,
+            XVec3::Y,
+            XVec3::new(translation.x, translation.y, X64::ONE),
         )
     }
 
@@ -286,9 +286,9 @@ impl Mat3 {
     pub fn from_angle(angle: X64) -> Self {
         let (sin, cos) = angle.sin_cos();
         Self::from_cols(
-            Vec3::new(cos, sin, X64::ZERO),
-            Vec3::new(-sin, cos, X64::ZERO),
-            Vec3::Z,
+            XVec3::new(cos, sin, X64::ZERO),
+            XVec3::new(-sin, cos, X64::ZERO),
+            XVec3::Z,
         )
     }
 
@@ -299,12 +299,12 @@ impl Mat3 {
     /// [`Self::transform_point2()`] and [`Self::transform_vector2()`].
     #[inline]
     #[must_use]
-    pub fn from_scale_angle_translation(scale: Vec2, angle: X64, translation: Vec2) -> Self {
+    pub fn from_scale_angle_translation(scale: XVec2, angle: X64, translation: XVec2) -> Self {
         let (sin, cos) = angle.sin_cos();
         Self::from_cols(
-            Vec3::new(cos * scale.x, sin * scale.x, X64::ZERO),
-            Vec3::new(-sin * scale.y, cos * scale.y, X64::ZERO),
-            Vec3::new(translation.x, translation.y, X64::ONE),
+            XVec3::new(cos * scale.x, sin * scale.x, X64::ZERO),
+            XVec3::new(-sin * scale.y, cos * scale.y, X64::ZERO),
+            XVec3::new(translation.x, translation.y, X64::ONE),
         )
     }
 
@@ -318,14 +318,14 @@ impl Mat3 {
     /// Will panic if all elements of `scale` are zero when `assert` is enabled.
     #[inline]
     #[must_use]
-    pub fn from_scale(scale: Vec2) -> Self {
+    pub fn from_scale(scale: XVec2) -> Self {
         // Do not panic as long as any component is non-zero
         assert!(scale.x != 0 || scale.y != 0);
 
         Self::from_cols(
-            Vec3::new(scale.x, X64::ZERO, X64::ZERO),
-            Vec3::new(X64::ZERO, scale.y, X64::ZERO),
-            Vec3::Z,
+            XVec3::new(scale.x, X64::ZERO, X64::ZERO),
+            XVec3::new(X64::ZERO, scale.y, X64::ZERO),
+            XVec3::Z,
         )
     }
 
@@ -334,8 +334,8 @@ impl Mat3 {
     /// The resulting matrix can be used to transform 2D points and vectors. See
     /// [`Self::transform_point2()`] and [`Self::transform_vector2()`].
     #[inline]
-    pub fn from_mat2(m: Mat2) -> Self {
-        Self::from_cols((m.x_axis, X64::ZERO).into(), (m.y_axis, X64::ZERO).into(), Vec3::Z)
+    pub fn from_mat2(m: XMat2) -> Self {
+        Self::from_cols((m.x_axis, X64::ZERO).into(), (m.y_axis, X64::ZERO).into(), XVec3::Z)
     }
 
     /// Creates a 3x3 matrix from the first 9 values in `slice`.
@@ -377,7 +377,7 @@ impl Mat3 {
     /// Panics if `index` is greater than 2.
     #[inline]
     #[must_use]
-    pub fn col(&self, index: usize) -> Vec3 {
+    pub fn col(&self, index: usize) -> XVec3 {
         match index {
             0 => self.x_axis,
             1 => self.y_axis,
@@ -392,7 +392,7 @@ impl Mat3 {
     ///
     /// Panics if `index` is greater than 2.
     #[inline]
-    pub fn col_mut(&mut self, index: usize) -> &mut Vec3 {
+    pub fn col_mut(&mut self, index: usize) -> &mut XVec3 {
         match index {
             0 => &mut self.x_axis,
             1 => &mut self.y_axis,
@@ -408,11 +408,11 @@ impl Mat3 {
     /// Panics if `index` is greater than 2.
     #[inline]
     #[must_use]
-    pub fn row(&self, index: usize) -> Vec3 {
+    pub fn row(&self, index: usize) -> XVec3 {
         match index {
-            0 => Vec3::new(self.x_axis.x, self.y_axis.x, self.z_axis.x),
-            1 => Vec3::new(self.x_axis.y, self.y_axis.y, self.z_axis.y),
-            2 => Vec3::new(self.x_axis.z, self.y_axis.z, self.z_axis.z),
+            0 => XVec3::new(self.x_axis.x, self.y_axis.x, self.z_axis.x),
+            1 => XVec3::new(self.x_axis.y, self.y_axis.y, self.z_axis.y),
+            2 => XVec3::new(self.x_axis.z, self.y_axis.z, self.z_axis.z),
             _ => panic!("index out of bounds"),
         }
     }
@@ -437,9 +437,9 @@ impl Mat3 {
     #[must_use]
     pub fn transpose(&self) -> Self {
         Self {
-            x_axis: Vec3::new(self.x_axis.x, self.y_axis.x, self.z_axis.x),
-            y_axis: Vec3::new(self.x_axis.y, self.y_axis.y, self.z_axis.y),
-            z_axis: Vec3::new(self.x_axis.z, self.y_axis.z, self.z_axis.z),
+            x_axis: XVec3::new(self.x_axis.x, self.y_axis.x, self.z_axis.x),
+            y_axis: XVec3::new(self.x_axis.y, self.y_axis.y, self.z_axis.y),
+            z_axis: XVec3::new(self.x_axis.z, self.y_axis.z, self.z_axis.z),
         }
     }
 
@@ -465,7 +465,7 @@ impl Mat3 {
         let tmp2 = self.x_axis.cross(self.y_axis);
         let det = self.z_axis.dot(tmp2);
         assert!(det != X64::ZERO);
-        let inv_det = Vec3::splat(det.recip());
+        let inv_det = XVec3::splat(det.recip());
         Self::from_cols(tmp0.mul(inv_det), tmp1.mul(inv_det), tmp2.mul(inv_det)).transpose()
     }
 
@@ -480,9 +480,9 @@ impl Mat3 {
     /// Will panic if the 2nd row of `self` is not `(0, 0, 1)` when `assert` is enabled.
     #[inline]
     #[must_use]
-    pub fn transform_point2(&self, rhs: Vec2) -> Vec2 {
-        assert!(self.row(2).abs_diff_eq(Vec3::Z, X64::DELTA << 3));
-        Mat2::from_cols(self.x_axis.truncate(), self.y_axis.truncate()) * rhs + self.z_axis.truncate()
+    pub fn transform_point2(&self, rhs: XVec2) -> XVec2 {
+        assert!(self.row(2).abs_diff_eq(XVec3::Z, X64::DELTA << 3));
+        XMat2::from_cols(self.x_axis.truncate(), self.y_axis.truncate()) * rhs + self.z_axis.truncate()
     }
 
     /// Rotates the given 2D vector.
@@ -496,15 +496,15 @@ impl Mat3 {
     /// Will panic if the 2nd row of `self` is not `(0, 0, 1)` when `assert` is enabled.
     #[inline]
     #[must_use]
-    pub fn transform_vector2(&self, rhs: Vec2) -> Vec2 {
-        assert!(self.row(2).abs_diff_eq(Vec3::Z, X64::DELTA << 3));
-        Mat2::from_cols(self.x_axis.truncate(), self.y_axis.truncate()) * rhs
+    pub fn transform_vector2(&self, rhs: XVec2) -> XVec2 {
+        assert!(self.row(2).abs_diff_eq(XVec3::Z, X64::DELTA << 3));
+        XMat2::from_cols(self.x_axis.truncate(), self.y_axis.truncate()) * rhs
     }
 
     /// Transforms a 3D vector.
     #[inline]
     #[must_use]
-    pub fn mul_vec3(&self, rhs: Vec3) -> Vec3 {
+    pub fn mul_vec3(&self, rhs: XVec3) -> XVec3 {
         let mut res = self.x_axis.mul(rhs.x);
         res = res.add(self.y_axis.mul(rhs.y));
         res = res.add(self.z_axis.mul(rhs.z));
@@ -573,14 +573,14 @@ impl Mat3 {
     }
 }
 
-impl Default for Mat3 {
+impl Default for XMat3 {
     #[inline]
     fn default() -> Self {
         Self::IDENTITY
     }
 }
 
-impl Add<Mat3> for Mat3 {
+impl Add<XMat3> for XMat3 {
     type Output = Self;
     #[inline]
     fn add(self, rhs: Self) -> Self::Output {
@@ -588,14 +588,14 @@ impl Add<Mat3> for Mat3 {
     }
 }
 
-impl AddAssign<Mat3> for Mat3 {
+impl AddAssign<XMat3> for XMat3 {
     #[inline]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.add_mat3(&rhs);
     }
 }
 
-impl Sub<Mat3> for Mat3 {
+impl Sub<XMat3> for XMat3 {
     type Output = Self;
     #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
@@ -603,14 +603,14 @@ impl Sub<Mat3> for Mat3 {
     }
 }
 
-impl SubAssign<Mat3> for Mat3 {
+impl SubAssign<XMat3> for XMat3 {
     #[inline]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.sub_mat3(&rhs);
     }
 }
 
-impl Neg for Mat3 {
+impl Neg for XMat3 {
     type Output = Self;
     #[inline]
     fn neg(self) -> Self::Output {
@@ -618,7 +618,7 @@ impl Neg for Mat3 {
     }
 }
 
-impl Mul<Mat3> for Mat3 {
+impl Mul<XMat3> for XMat3 {
     type Output = Self;
     #[inline]
     fn mul(self, rhs: Self) -> Self::Output {
@@ -626,30 +626,30 @@ impl Mul<Mat3> for Mat3 {
     }
 }
 
-impl MulAssign<Mat3> for Mat3 {
+impl MulAssign<XMat3> for XMat3 {
     #[inline]
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.mul_mat3(&rhs);
     }
 }
 
-impl Mul<Vec3> for Mat3 {
-    type Output = Vec3;
+impl Mul<XVec3> for XMat3 {
+    type Output = XVec3;
     #[inline]
-    fn mul(self, rhs: Vec3) -> Self::Output {
+    fn mul(self, rhs: XVec3) -> Self::Output {
         self.mul_vec3(rhs)
     }
 }
 
-impl Mul<Mat3> for X64 {
-    type Output = Mat3;
+impl Mul<XMat3> for X64 {
+    type Output = XMat3;
     #[inline]
-    fn mul(self, rhs: Mat3) -> Self::Output {
+    fn mul(self, rhs: XMat3) -> Self::Output {
         rhs.mul_scalar(self)
     }
 }
 
-impl Mul<X64> for Mat3 {
+impl Mul<X64> for XMat3 {
     type Output = Self;
     #[inline]
     fn mul(self, rhs: X64) -> Self::Output {
@@ -657,14 +657,14 @@ impl Mul<X64> for Mat3 {
     }
 }
 
-impl MulAssign<X64> for Mat3 {
+impl MulAssign<X64> for XMat3 {
     #[inline]
     fn mul_assign(&mut self, rhs: X64) {
         *self = self.mul_scalar(rhs);
     }
 }
 
-impl Sum<Self> for Mat3 {
+impl Sum<Self> for XMat3 {
     fn sum<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -673,7 +673,7 @@ impl Sum<Self> for Mat3 {
     }
 }
 
-impl<'a> Sum<&'a Self> for Mat3 {
+impl<'a> Sum<&'a Self> for XMat3 {
     fn sum<I>(iter: I) -> Self
     where
         I: Iterator<Item = &'a Self>,
@@ -682,7 +682,7 @@ impl<'a> Sum<&'a Self> for Mat3 {
     }
 }
 
-impl Product for Mat3 {
+impl Product for XMat3 {
     fn product<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -691,7 +691,7 @@ impl Product for Mat3 {
     }
 }
 
-impl<'a> Product<&'a Self> for Mat3 {
+impl<'a> Product<&'a Self> for XMat3 {
     fn product<I>(iter: I) -> Self
     where
         I: Iterator<Item = &'a Self>,
@@ -700,7 +700,7 @@ impl<'a> Product<&'a Self> for Mat3 {
     }
 }
 
-impl PartialEq for Mat3 {
+impl PartialEq for XMat3 {
     #[inline]
     fn eq(&self, rhs: &Self) -> bool {
         self.x_axis.eq(&rhs.x_axis) && self.y_axis.eq(&rhs.y_axis) && self.z_axis.eq(&rhs.z_axis)
@@ -708,7 +708,7 @@ impl PartialEq for Mat3 {
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl AsRef<[X64; 9]> for Mat3 {
+impl AsRef<[X64; 9]> for XMat3 {
     #[inline]
     fn as_ref(&self) -> &[X64; 9] {
         unsafe { &*(self as *const Self as *const [X64; 9]) }
@@ -716,7 +716,7 @@ impl AsRef<[X64; 9]> for Mat3 {
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl AsMut<[X64; 9]> for Mat3 {
+impl AsMut<[X64; 9]> for XMat3 {
     #[inline]
     fn as_mut(&mut self) -> &mut [X64; 9] {
         unsafe { &mut *(self as *mut Self as *mut [X64; 9]) }
@@ -724,9 +724,9 @@ impl AsMut<[X64; 9]> for Mat3 {
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl fmt::Debug for Mat3 {
+impl fmt::Debug for XMat3 {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt.debug_struct(stringify!(Mat3))
+        fmt.debug_struct(stringify!(XMat3))
             .field("x_axis", &self.x_axis)
             .field("y_axis", &self.y_axis)
             .field("z_axis", &self.z_axis)
@@ -735,7 +735,7 @@ impl fmt::Debug for Mat3 {
 }
 
 #[cfg(not(target_arch = "spirv"))]
-impl fmt::Display for Mat3 {
+impl fmt::Display for XMat3 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "[{}, {}, {}]", self.x_axis, self.y_axis, self.z_axis)
     }

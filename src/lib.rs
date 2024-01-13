@@ -344,17 +344,35 @@ helpers_fixed!(X128);
 /// Constructs a fixed-point number of type X32.
 #[macro_export]
 macro_rules! x32 {
-($num:expr) => { X32::from_num($num) };
+        ($num:expr) => { X32::from_num($num) };
 }
 
 /// Constructs a fixed-point number of type X64.
 #[macro_export]
 macro_rules! x64 {
-($num:expr) => { X64::from_num($num) };
+    ($num:expr) => { X64::from_num($num) };
 }
 
 /// Constructs a fixed-point number of type X128.
 #[macro_export]
 macro_rules! x128 {
-($num:expr) => { X128::from_num($num) };
+    ($num:expr) => { X128::from_num($num) };
+}
+
+/// Constructs a Vec2.
+#[macro_export]
+macro_rules! xvec2 {
+    ($x:expr, $y:expr) => { XVec2::new(x64!(x), x64!(y)) };
+}
+
+/// Constructs a Vec3.
+#[macro_export]
+macro_rules! xvec3 {
+    ($x:expr, $y:expr, $z:expr) => { XVec3::new(x64!(x), x64!(y), x64!(z)) };
+}
+
+/// Constructs a Vec4.
+#[macro_export]
+macro_rules! xvec4 {
+    ($x:expr, $y:expr, $z:expr, $w:expr) => { XVec4::new(x64!(x), x64!(y), x64!(z), x64!(w)) };
 }
