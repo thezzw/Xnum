@@ -397,7 +397,7 @@ impl XVec4 {
     #[must_use]
     pub fn is_normalized(self) -> bool {
         // TODO: do something with epsilon
-        (self.length_squared() - X64::ONE).abs() <= X64::DELTA << 3
+        (self.length_squared() - X64::ONE).abs() <= X64::DELTA << 4
     }
 
     /// Returns the vector projection of `self` onto `rhs`.

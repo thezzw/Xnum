@@ -280,7 +280,7 @@ impl XQuat {
         assert!(from.is_normalized());
         assert!(to.is_normalized());
 
-        let one_minus_eps: X64 = X64::ONE - (X64::ONE * 2) * (X64::DELTA << 3);
+        let one_minus_eps: X64 = X64::ONE - (X64::ONE * 2) * (X64::DELTA << 4);
         let dot = from.dot(to);
         if dot > one_minus_eps {
             // 0° singulary: from ≈ to
@@ -336,7 +336,7 @@ impl XQuat {
         assert!(from.is_normalized());
         assert!(to.is_normalized());
 
-        let one_minus_eps: X64 = X64::ONE - (X64::ONE * 2) * (X64::DELTA << 3);
+        let one_minus_eps: X64 = X64::ONE - (X64::ONE * 2) * (X64::DELTA << 4);
         let dot = from.dot(to);
         if dot > one_minus_eps {
             // 0° singulary: from ≈ to
@@ -361,7 +361,7 @@ impl XQuat {
     #[inline]
     #[must_use]
     pub fn to_axis_angle(self) -> (XVec3, X64) {
-        let epsilon: X64 = X64::DELTA << 3;
+        let epsilon: X64 = X64::DELTA << 4;
         let v = XVec3::new(self.x, self.y, self.z);
         let length = v.length();
         if length >= epsilon {
@@ -427,7 +427,7 @@ impl XQuat {
     #[inline]
     #[must_use]
     pub fn inverse(self) -> Self {
-        assert!(self.is_normalized());
+        self.be_normalized();
         self.conjugate()
     }
 
@@ -478,6 +478,12 @@ impl XQuat {
     #[must_use]
     pub fn normalize(self) -> Self {
         Self::from_vec4(XVec4::from(self).normalize())
+    }
+
+    #[inline]
+    pub fn be_normalized(mut self) {
+        let norm = self.normalize();
+        (self.x, self.y, self.z, self.w) = (norm.x, norm.y, norm.z, norm.w);
     }
 
     /// Returns `true` if, and only if, all elements are finite.
@@ -536,7 +542,8 @@ impl XQuat {
     #[inline]
     #[must_use]
     pub fn angle_between(self, rhs: Self) -> X64 {
-        assert!(self.is_normalized() && rhs.is_normalized());
+        self.be_normalized();
+        rhs.be_normalized();
         self.dot(rhs).abs().acos().1 * (X64::ONE * 2)
     }
 
@@ -568,8 +575,8 @@ impl XQuat {
     #[inline]
     #[must_use]
     pub fn lerp(self, end: Self, s: X64) -> Self {
-        assert!(self.is_normalized());
-        assert!(end.is_normalized());
+        self.be_normalized();
+        end.be_normalized();
 
         let start = self;
         let dot = start.dot(end);
@@ -591,8 +598,8 @@ impl XQuat {
     #[must_use]
     pub fn slerp(self, mut end: Self, s: X64) -> Self {
         // http://number-none.com/product/Understanding%20Slerp,%20Then%20Not%20Using%20It/
-        assert!(self.is_normalized());
-        assert!(end.is_normalized());
+        self.be_normalized();
+        end.be_normalized();
 
         let dot_threshold: X64 = x64!(0.9995);
 
@@ -630,7 +637,7 @@ impl XQuat {
     #[inline]
     #[must_use]
     pub fn mul_vec3(self, rhs: XVec3) -> XVec3 {
-        assert!(self.is_normalized());
+        self.be_normalized();
 
         let w = self.w;
         let b = XVec3::new(self.x, self.y, self.z);
@@ -651,8 +658,8 @@ impl XQuat {
     #[inline]
     #[must_use]
     pub fn mul_quat(self, rhs: Self) -> Self {
-        assert!(self.is_normalized());
-        assert!(rhs.is_normalized());
+        self.be_normalized();
+        rhs.be_normalized();
 
         let (x0, y0, z0, w0) = self.into();
         let (x1, y1, z1, w1) = rhs.into();

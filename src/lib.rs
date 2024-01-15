@@ -362,17 +362,17 @@ macro_rules! x128 {
 /// Constructs a Vec2.
 #[macro_export]
 macro_rules! xvec2 {
-    ($x:expr, $y:expr) => { XVec2::new(x64!(x), x64!(y)) };
+    ($x:expr, $y:expr) => { XVec2::new(x64!($x), x64!($y)) };
 }
 
 /// Constructs a Vec3.
 #[macro_export]
 macro_rules! xvec3 {
-    ($x:expr, $y:expr, $z:expr) => { XVec3::new(x64!(x), x64!(y), x64!(z)) };
+    ($x:expr, $y:expr, $z:expr) => { XVec3::new(x64!($x), x64!($y), x64!($z)) };
 }
 
 /// Constructs a Vec4.
 #[macro_export]
 macro_rules! xvec4 {
-    ($x:expr, $y:expr, $z:expr, $w:expr) => { XVec4::new(x64!(x), x64!(y), x64!(z), x64!(w)) };
+    ($x:expr, $y:expr, $z:expr, $w:expr) => { XVec4::new(x64!($x), x64!($y), x64!($z), x64!($w)) };
 }
