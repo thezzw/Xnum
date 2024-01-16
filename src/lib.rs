@@ -17,10 +17,8 @@ pub mod deref;
 
 pub mod rand;
 
-use fixed::{types::{I16F16, I32F32, I64F64, I4F60}, traits::Fixed};
-pub type X32 = I16F16;
+use fixed::{ types::{I32F32, I4F60}, traits::Fixed };
 pub type X64 = I32F32;
-pub type X128 = I64F64;
 
 const CIRCLE_I4F60: [(i8, i64, i64); 32] = [
     (0, 905502432259640320, 815238614083298944),
@@ -79,158 +77,149 @@ pub trait FixedTrigonometry: Fixed {
     fn atan2(y: Self, x: Self) -> Self;
 }
 
-macro_rules! cordic_fixed {
-    ($Fixed:ident) => {
-        impl FixedTrigonometry for $Fixed {
-            fn sin_cos(self) -> (Self, Self) {
-                // 把需要求解的角转换至[-PI/2, PI/2]范围内
-                let mut result_factor = Self::from_num(I4F60::from_bits(CIRCLE_KN_I4F60));
-                let mut preliminary_angle = self % ( 2 * Self::PI );
+impl FixedTrigonometry for X64 {
+    fn sin_cos(self) -> (Self, Self) {
+        // 把需要求解的角转换至[-PI/2, PI/2]范围内
+        let mut result_factor = Self::from_num(I4F60::from_bits(CIRCLE_KN_I4F60));
+        let mut preliminary_angle = self % ( 2 * Self::PI );
         
-                if preliminary_angle < 0 { preliminary_angle += 2 * Self::PI }
-                if preliminary_angle > Self::PI / 2 && preliminary_angle < Self::PI * 3 / 2 {
-                    result_factor = -result_factor;
-                    if preliminary_angle < Self::PI { preliminary_angle += Self::PI }
-                    else { preliminary_angle -= Self::PI }
-                }
-                if preliminary_angle >= Self::PI * 3 / 2 { preliminary_angle -= 2 * Self::PI; }
-        
-                // 坐标旋转计算
-                let mut x = Self::ONE;
-                let mut y = Self::ZERO;
-                let mut remain = preliminary_angle;
-        
-                let (mut xv, mut yv);
-                for (k, rad, _) in CIRCLE_I4F60 {
-                    if remain > 0 { // CCW.
-                        xv = x - (y >> k);
-                        yv = (x >> k) + y;
-                        remain -= Self::from_num(I4F60::from_bits(rad));
-                    } else { // CW.
-                        xv = x + (y >> k);
-                        yv = y - (x >> k);
-                        remain += Self::from_num(I4F60::from_bits(rad));
-                    }
-                    (x, y) = (xv, yv);
-                }
-        
-                let result = (y * result_factor, x * result_factor);
-        
-                result
-            }
-        
-            fn sin(self) -> Self { self.sin_cos().0 }
-        
-            fn cos(self) -> Self { self.sin_cos().1 }
-        
-            fn tan(self) -> Self { 
-                let sin_cos = self.sin_cos();
-                if sin_cos.1 == 0 { 
-                    if sin_cos.0 > 0 { return Self::MAX; }
-                    else { return Self::MIN; }
-                }
-                sin_cos.0 / sin_cos.1
-            }
-        
-            fn asin(self) -> (Self, Self) {
-                if self > 1 || self < -1 { return (Self::ZERO, Self::ZERO); }
-        
-                let mut x = Self::ONE;
-                let mut y = Self::ZERO;
-                let mut z = Self::ZERO;
-        
-                let (mut xv, mut yv);
-                for (k, rad, cos) in CIRCLE_I4F60 {
-                    if (x > 0 && self > y) || (x < 0 && self < y) {
-                        xv = x - (y >> k);
-                        yv = (x >> k) + y;
-                        z += Self::from_num(I4F60::from_bits(rad));
-                    } else {
-                        xv = x + (y >> k);
-                        yv = y - (x >> k);
-                        z -= Self::from_num(I4F60::from_bits(rad));
-                    }
-                    let cos = Self::from_num(I4F60::from_bits(cos));
-                    (x, y) = (xv * cos, yv * cos);
-                }
-        
-                let result ;
-                if z > 0 {
-                    result = (z, -z + Self::PI);
-                } else {
-                    result = (-z - Self::PI, z);
-                }
-                result
-            }
-        
-            fn acos(self) -> (Self, Self) {
-                if self > 1 || self < -1 { return (Self::ZERO, Self::ZERO); }
-        
-                let mut x = Self::ZERO;
-                let mut y = Self::ONE;
-                let mut z = Self::PI / 2;
-        
-                let (mut xv, mut yv);
-                for (k, rad, cos) in CIRCLE_I4F60 {
-                    if (y > 0 && self < x) || (y < 0 && self > x) {
-                        xv = x - (y >> k);
-                        yv = (x >> k) + y;
-                        z += Self::from_num(I4F60::from_bits(rad));
-                    } else {
-                        xv = x + (y >> k);
-                        yv = y - (x >> k);
-                        z -= Self::from_num(I4F60::from_bits(rad));
-                    }
-                    let cos = Self::from_num(I4F60::from_bits(cos));
-                    (x, y) = (xv * cos, yv * cos);
-                }
-        
-                let result = (-z, z);
-                result
-            }
-        
-            fn atan(self) -> (Self, Self) {
-                let mut x = Self::ONE;
-                let mut y = Self::ZERO;
-                let mut z = Self::ZERO;
-            
-                let (mut xv, mut yv);
-                for (k, rad, cos) in CIRCLE_I4F60 {
-                    if x > 0 && self > (y / x) {
-                        xv = x - (y >> k);
-                        yv = (x >> k) + y;
-                        z += Self::from_num(I4F60::from_bits(rad));
-                    } else {
-                        xv = x + (y >> k);
-                        yv = y - (x >> k);
-                        z -= Self::from_num(I4F60::from_bits(rad));
-                    }
-            
-                    let cos = Self::from_num(I4F60::from_bits(cos));
-                    (x, y) = (xv * cos, yv * cos);
-                }
-            
-                let result;
-                if z > 0 {
-                    result = (z - Self::PI, z);
-                } else {
-                    result = (z, z + Self::PI);
-                }
-                result
-            }
-
-            fn atan2(y: Self, x: Self) -> Self {
-                let opt_rst = (y / x).atan();
-                if y < X64::ZERO { return opt_rst.0; }
-                opt_rst.1
-            }
+        if preliminary_angle < 0 { preliminary_angle += 2 * Self::PI }
+        if preliminary_angle > Self::PI / 2 && preliminary_angle < Self::PI * 3 / 2 {
+            result_factor = -result_factor;
+            if preliminary_angle < Self::PI { preliminary_angle += Self::PI }
+            else { preliminary_angle -= Self::PI }
         }
+        if preliminary_angle >= Self::PI * 3 / 2 { preliminary_angle -= 2 * Self::PI; }
+        
+        // 坐标旋转计算
+        let mut x = Self::ONE;
+        let mut y = Self::ZERO;
+        let mut remain = preliminary_angle;
+        
+        let (mut xv, mut yv);
+        for (k, rad, _) in CIRCLE_I4F60 {
+            if remain > 0 { // CCW.
+                xv = x - (y >> k);
+                yv = (x >> k) + y;
+                remain -= Self::from_num(I4F60::from_bits(rad));
+            } else { // CW.
+                xv = x + (y >> k);
+                yv = y - (x >> k);
+                remain += Self::from_num(I4F60::from_bits(rad));
+            }
+            (x, y) = (xv, yv);
+        }
+        
+        let result = (y * result_factor, x * result_factor);
+        
+        result
+    }
+        
+    fn sin(self) -> Self { self.sin_cos().0 }
+        
+    fn cos(self) -> Self { self.sin_cos().1 }
+        
+    fn tan(self) -> Self { 
+        let sin_cos = self.sin_cos();
+        if sin_cos.1 == 0 { 
+            if sin_cos.0 > 0 { return Self::MAX; }
+            else { return Self::MIN; }
+        }
+        sin_cos.0 / sin_cos.1
+    }
+        
+    fn asin(self) -> (Self, Self) {
+        if self > 1 || self < -1 { return (Self::ZERO, Self::ZERO); }
+        
+        let mut x = Self::ONE;
+        let mut y = Self::ZERO;
+        let mut z = Self::ZERO;
+        
+        let (mut xv, mut yv);
+        for (k, rad, cos) in CIRCLE_I4F60 {
+            if (x > 0 && self > y) || (x < 0 && self < y) {
+                xv = x - (y >> k);
+                yv = (x >> k) + y;
+                z += Self::from_num(I4F60::from_bits(rad));
+            } else {
+                xv = x + (y >> k);
+                yv = y - (x >> k);
+                z -= Self::from_num(I4F60::from_bits(rad));
+            }
+            let cos = Self::from_num(I4F60::from_bits(cos));
+            (x, y) = (xv * cos, yv * cos);
+        }
+        
+        let result ;
+        if z > 0 {
+            result = (z, -z + Self::PI);
+        } else {
+            result = (-z - Self::PI, z);
+        }
+        result
+    }
+        
+    fn acos(self) -> (Self, Self) {
+        if self > 1 || self < -1 { return (Self::ZERO, Self::ZERO); }
+        
+        let mut x = Self::ZERO;
+        let mut y = Self::ONE;
+        let mut z = Self::PI / 2;
+        
+        let (mut xv, mut yv);
+        for (k, rad, cos) in CIRCLE_I4F60 {
+            if (y > 0 && self < x) || (y < 0 && self > x) {
+                xv = x - (y >> k);
+                yv = (x >> k) + y;
+                z += Self::from_num(I4F60::from_bits(rad));
+            } else {
+                xv = x + (y >> k);
+                yv = y - (x >> k);
+                z -= Self::from_num(I4F60::from_bits(rad));
+            }
+            let cos = Self::from_num(I4F60::from_bits(cos));
+            (x, y) = (xv * cos, yv * cos);
+        }
+        
+        let result = (-z, z);
+        result
+    }
+        
+    fn atan(self) -> (Self, Self) {
+        let mut x = Self::ONE;
+        let mut y = Self::ZERO;
+        let mut z = Self::ZERO;
+    
+        let (mut xv, mut yv);
+        for (k, rad, cos) in CIRCLE_I4F60 {
+            if x > 0 && self > (y / x) {
+                xv = x - (y >> k);
+                yv = (x >> k) + y;
+                z += Self::from_num(I4F60::from_bits(rad));
+            } else {
+                xv = x + (y >> k);
+                yv = y - (x >> k);
+                z -= Self::from_num(I4F60::from_bits(rad));
+            }
+    
+            let cos = Self::from_num(I4F60::from_bits(cos));
+            (x, y) = (xv * cos, yv * cos);
+        }
+    
+        let result;
+        if z > 0 {
+            result = (z - Self::PI, z);
+        } else {
+            result = (z, z + Self::PI);
+        }
+        result
+    }
+    fn atan2(y: Self, x: Self) -> Self {
+        let opt_rst = (y / x).atan();
+        if y < X64::ZERO { return opt_rst.0; }
+        opt_rst.1
     }
 }
-
-cordic_fixed!(X32);
-cordic_fixed!(X64);
-cordic_fixed!(X128);
 
 /// Elementary functions.
 pub trait FixedElementary: Fixed {
@@ -242,65 +231,57 @@ pub trait FixedElementary: Fixed {
     fn exp(self) -> Self;
 }
 
-macro_rules! sqrt_fixed {
-    ($Fixed:ident) => {
-        impl FixedElementary for $Fixed {
-            fn sqrt(self) -> Self {
-                if self < Self::ZERO { return Self::NAN; }
-                if self == Self::ZERO { return self; }
+impl FixedElementary for X64 {
+    fn sqrt(self) -> Self {
+        if self < Self::ZERO { return Self::NAN; }
+        if self == Self::ZERO { return self; }
 
-                let epsilon = Self::DELTA << 3;
-                let mut x = self;
+        let epsilon = Self::DELTA << 3;
+        let mut x = self;
 
-                loop {
-                    let next_x = (x + self / x) / 2;
-                    if (next_x - x).abs() < epsilon { break; }
-                    x = next_x;
-                }
-
-                x
-            }
-
-            fn powf(self, n: Self) -> Self {
-                if n == Self::ZERO {
-                    return Self::ONE;
-                }
-                
-                let mut result = Self::ONE;
-                let mut abs_exponent = n.abs();
-                let mut current_power = self;
-            
-                while abs_exponent > 0 {
-                    if abs_exponent % 2 == 1 {
-                        result *= current_power;
-                    }
-                    current_power *= current_power;
-                    abs_exponent /= 2;
-                }
-            
-                if n < 0 {
-                    result = result.recip();
-                }
-            
-                result
-            }
-            
-            fn exp(self) -> Self {
-                let mut rst = Self::ONE;
-                let mut term = Self::ONE;
-                for i in 1..=10 {
-                    term *= self / Self::from_num(i);
-                    rst += term;
-                }
-                rst
-            }
+        loop {
+            let next_x = (x + self / x) / 2;
+            if (next_x - x).abs() < epsilon { break; }
+            x = next_x;
         }
+
+        x
+    }
+
+    fn powf(self, n: Self) -> Self {
+        if n == Self::ZERO {
+            return Self::ONE;
+        }
+        
+        let mut result = Self::ONE;
+        let mut abs_exponent = n.abs();
+        let mut current_power = self;
+    
+        while abs_exponent > 0 {
+            if abs_exponent % 2 == 1 {
+                result *= current_power;
+            }
+            current_power *= current_power;
+            abs_exponent /= 2;
+        }
+    
+        if n < 0 {
+            result = result.recip();
+        }
+    
+        result
+    }
+    
+    fn exp(self) -> Self {
+        let mut rst = Self::ONE;
+        let mut term = Self::ONE;
+        for i in 1..=10 {
+            term *= self / Self::from_num(i);
+            rst += term;
+        }
+        rst
     }
 }
-
-sqrt_fixed!(X32);
-sqrt_fixed!(X64);
-sqrt_fixed!(X128);
 
 /// Supplement for fixed-point number types.
 pub trait FixedHelpers: Fixed {
@@ -316,47 +297,24 @@ pub trait FixedHelpers: Fixed {
     fn is_nan(self) -> bool;
 }
 
-
-macro_rules! helpers_fixed {
-    ($Fixed:ident) => {
-        impl FixedHelpers for $Fixed {
-            const NAN: Self = Self::MIN;
-            const INFINITY: Self = Self::MAX;
-            const NEG_INFINITY: Self = Self::MIN;
-
-            #[inline]
-            fn is_finite(self) -> bool {
-                self != Self::INFINITY && self != Self::NEG_INFINITY
-            }
-
-            #[inline]
-            fn is_nan(self) -> bool {
-                self == Self::NAN
-            }
-        }
+impl FixedHelpers for X64 {
+    const NAN: Self = Self::MIN;
+    const INFINITY: Self = Self::MAX;
+    const NEG_INFINITY: Self = Self::from_bits(i64::MIN + 1);
+    #[inline]
+    fn is_finite(self) -> bool {
+        self != Self::INFINITY && self != Self::NEG_INFINITY
     }
-}
-
-helpers_fixed!(X32);
-helpers_fixed!(X64);
-helpers_fixed!(X128);
-
-/// Constructs a fixed-point number of type X32.
-#[macro_export]
-macro_rules! x32 {
-        ($num:expr) => { X32::from_num($num) };
+    #[inline]
+    fn is_nan(self) -> bool {
+        self == Self::NAN
+    }
 }
 
 /// Constructs a fixed-point number of type X64.
 #[macro_export]
 macro_rules! x64 {
     ($num:expr) => { X64::from_num($num) };
-}
-
-/// Constructs a fixed-point number of type X128.
-#[macro_export]
-macro_rules! x128 {
-    ($num:expr) => { X128::from_num($num) };
 }
 
 /// Constructs a Vec2.
